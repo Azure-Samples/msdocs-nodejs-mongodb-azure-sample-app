@@ -1,4 +1,4 @@
-# Project Name
+# Express.js/MongoDB Azure sample app
 
 (short, 1-3 sentenced, description of the project)
 
