@@ -1,6 +1,6 @@
 
 LOCATION='eastus'                                        # Use 'az account list-locations --output table' to list locations
-RESOURCE_GROUP_NAME='msdocs-expressjs-modgodb-quickstart'
+RESOURCE_GROUP_NAME='msdocs-expressjs-mongodb-tutorial'
 
 WEB_APP_NAME='msdocs-expressjs-mongodb-123'              # Change 123 to any three characters to form a unique name across Azure
 APP_SERVICE_PLAN_NAME='msdocs-expressjs-mongodb-plan-123'    
