@@ -1,48 +1,82 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var createError = require("http-errors");
+var express = require("express");
+var mongoose = require("mongoose");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
+const { format } = require("date-fns");
 
-var data = require('./data');
+// 1st party dependencies
+var configData = require("./config/connection");
+var indexRouter = require("./routes/index");
 
-var indexRouter = require('./routes/index');
+async function getApp() {
 
-var app = express();
+  // Database
+  var connectionInfo = await configData.getConnectionInfo();
+  mongoose.connect(connectionInfo.DATABASE_URL);
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+  var app = express();
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+  var port = normalizePort(process.env.PORT || '3000');
+  app.set('port', port);
 
-const {format} = require("date-fns")
-app.locals.format = format;
+  // view engine setup
+  app.set("views", path.join(__dirname, "views"));
+  app.set("view engine", "pug");
 
-app.use('/', indexRouter);
+  app.use(logger("dev"));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+  app.use(cookieParser());
+  app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js')); // redirect bootstrap JS
-app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css')); // redirect CSS bootstrap
+  app.locals.format = format;
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+  app.use("/", indexRouter);
+  app.use("/js", express.static(__dirname + "/node_modules/bootstrap/dist/js")); // redirect bootstrap JS
+  app.use(
+    "/css",
+    express.static(__dirname + "/node_modules/bootstrap/dist/css")
+  ); // redirect CSS bootstrap
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // catch 404 and forward to error handler
+  app.use(function (req, res, next) {
+    next(createError(404));
+  });
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+  // error handler
+  app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get("env") === "development" ? err : {};
 
+    // render the error page
+    res.status(err.status || 500);
+    res.render("error");
+  });
 
-module.exports = app;
+  return app;
+}
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+ function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+module.exports = {
+  getApp
+};
