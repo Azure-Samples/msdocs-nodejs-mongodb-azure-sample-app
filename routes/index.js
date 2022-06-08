@@ -1,8 +1,7 @@
 var express = require('express');
-var router = express.Router();
+var Task = require('../models/task');
 
-const mongoose = require('mongoose');
-const Task = mongoose.model('Task');
+var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
