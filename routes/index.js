@@ -1,6 +1,7 @@
 var express = require('express');
 var Task = require('../models/task');
 
+const welcome = require("../lib/welcome");
 var router = express.Router();
 
 /* GET home page. */
@@ -9,9 +10,8 @@ router.get('/', function(req, res, next) {
     .then((tasks) => {      
       const currentTasks = tasks.filter(task => !task.completed);
       const completedTasks = tasks.filter(task => task.completed === true);
-
       console.log(`Total tasks: ${tasks.length}   Current tasks: ${currentTasks.length}    Completed tasks:  ${completedTasks.length}`)
-      res.render('index', { currentTasks: currentTasks, completedTasks: completedTasks });
+      res.render('index', { currentTasks: currentTasks, completedTasks: completedTasks, welcome: welcome.welcome });
     })
     .catch((err) => {
       console.log(err);

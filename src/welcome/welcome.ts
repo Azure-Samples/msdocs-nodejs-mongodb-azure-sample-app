@@ -1,0 +1,1 @@
+export const welcome = "WEO";

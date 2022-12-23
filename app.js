@@ -5,13 +5,14 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const { format } = require("date-fns");
+const welcome = require("./lib/welcome");
 
 // 1st party dependencies
 var configData = require("./config/connection");
 var indexRouter = require("./routes/index");
 
 async function getApp() {
-
+  console.log(welcome.welcome)
   // Database
   var connectionInfo = await configData.getConnectionInfo();
   mongoose.connect(connectionInfo.DATABASE_URL);
