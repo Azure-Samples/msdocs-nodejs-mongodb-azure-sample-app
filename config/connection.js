@@ -3,18 +3,21 @@ const mongoose = require("mongoose");
 const { getSecret } = require("./keyvault");
 
 async function putKeyVaultSecretInEnvVar() {
-
+    const openaiAPIKey = KEY_VAULT_SECRET_NAME_OPENAI_API_KEY
     const secretName = process.env.KEY_VAULT_SECRET_NAME_DATABASE_URL;
     const keyVaultName = process.env.KEY_VAULT_NAME;
 
     console.log(secretName);
     console.log(keyVaultName);
+    console.log(openaiAPIKey);
     
-    if (!secretName || !keyVaultName) throw Error("getSecret: Required params missing");
+    if (!secretName || !keyVaultName || !openaiAPIKey) throw Error("getSecret: Required params missing");
 
     connectionString = await getSecret(secretName, keyVaultName);
-    process.env.DATABASE_URL = connectionString;
+    openaiAPIKeyString = await getSecret(openaiAPIKey, keyVaultName);
 
+    process.env.DATABASE_URL = connectionString;
+    process.env.OPENAI_API_KEY = openaiAPIKeyString;
 }
 
 async function getConnectionInfo() {
@@ -33,7 +36,8 @@ async function getConnectionInfo() {
 
   return {
     DATABASE_URL: process.env.DATABASE_URL,
-    DATABASE_NAME: process.env.DATABASE_NAME
+    DATABASE_NAME: process.env.DATABASE_NAME,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY
   }
 }
 

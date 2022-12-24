@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>A!</title>
+</head>
+
+<body>
+    <h1>AI</h1>
+    <!-- create button for getting clipboard and putting content in paragraph -->
+    <button onclick="getClipboard()">Get Clipboard</button>
+    <p id="clipboard"></p>
+    <script>            
+        const { Configuration, OpenAIApi } = require("openai");
+
+        function getClipboard() {
+
+            // get clipboard content
+            navigator.clipboard.readText().then(clipText => {
+                // put content in paragraph
+                document.getElementById("clipboard").innerHTML = clipText;
+                //call openai function to get completion
+                const openai = new OpenAIApi(new Configuration({
+                    apiKey
+                }));
+                openai.createCompletion({
+                    model: "text-davinci-002",
+                    prompt: clipText,
+                    maxTokens: 5,
+                    temperature: 0.9,
+                    topP: 1,
+                    presencePenalty: 0,
+                    frequencyPenalty: 0,
+                    bestOf: 1,
+                    n: 1,
+                    stream: false,
+                    stop: ["\n", " Human:", " AI:"]
+                }).then((completion) => {
+                    console.log(completion.data.choices[0].text);
+                })
+
+            });
+        }
+    </script>
+</body>
+
+</html>

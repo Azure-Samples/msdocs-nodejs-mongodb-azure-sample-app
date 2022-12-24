@@ -21,8 +21,11 @@ async function getApp() {
 
   var port = normalizePort(process.env.PORT || '3000');
   app.set('port', port);
+  // create a route for static html files
+  app.use("/ai", express.static(__dirname + "/ai"));
 
   // view engine setup
+  // app.use("/ai", express.static(__dirname + "/ai"));
   app.set("views", path.join(__dirname, "views"));
   app.set("view engine", "pug");
 
