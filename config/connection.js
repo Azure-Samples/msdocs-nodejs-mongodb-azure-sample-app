@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const { getSecret } = require("./keyvault");
 
 async function putKeyVaultSecretInEnvVar() {
-    const openaiAPIKey = KEY_VAULT_SECRET_NAME_OPENAI_API_KEY
+    const openaiAPIKey = process.env.KEY_VAULT_SECRET_NAME_OPENAI_API_KEY
     const secretName = process.env.KEY_VAULT_SECRET_NAME_DATABASE_URL;
     const keyVaultName = process.env.KEY_VAULT_NAME;
 
