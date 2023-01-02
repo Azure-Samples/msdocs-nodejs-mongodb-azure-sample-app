@@ -7,41 +7,41 @@
 </head>
 
 <body>
-    <h1>AI</h1>
+    <h1>AI v1.10</h1>
     <!-- create button for getting clipboard and putting content in paragraph -->
-    <button onclick="getClipboard()">Get Clipboard</button>
-    <p id="clipboard"></p>
-    <script>            
-        const { Configuration, OpenAIApi } = require("openai");
-
-        function getClipboard() {
-
-            // get clipboard content
-            navigator.clipboard.readText().then(clipText => {
-                // put content in paragraph
-                document.getElementById("clipboard").innerHTML = clipText;
-                //call openai function to get completion
-                const openai = new OpenAIApi(new Configuration({
-                    apiKey
-                }));
-                openai.createCompletion({
-                    model: "text-davinci-002",
-                    prompt: clipText,
-                    maxTokens: 5,
-                    temperature: 0.9,
-                    topP: 1,
-                    presencePenalty: 0,
-                    frequencyPenalty: 0,
-                    bestOf: 1,
-                    n: 1,
-                    stream: false,
-                    stop: ["\n", " Human:", " AI:"]
-                }).then((completion) => {
-                    console.log(completion.data.choices[0].text);
-                })
-
-            });
+    <!-- <button onclick="getClipboard()">Get Clipboard</button> -->
+    <textarea id="clipboard" style="width:100%;height: 250px;"></textarea>
+    <!-- paragraph with id=summery -->
+    <p id="summery"></p>
+    <script src="/ai/ai.js"> </script>
+    <script>
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            return (false);
         }
+        //get query parameter called text and put it in paragraph with id=clipboard
+        //url decode clickedElement.clickedElement and put it in variable text
+        var text = decodeURIComponent(getQueryVariable("text"));
+        var clipboard = document.getElementById("clipboard")
+        clipboard.innerText = 'you are a snarky news reporter.  create an article about the games that went as follows ' +text;
+
+
+        // on blur of clipboard textarea, alert with text
+        clipboard.addEventListener("blur", function () {
+            document.getElementById("summery").innerHTML = ''
+            getCompletion(clipboard.value, event => {
+                //append event data to paragraph with id=summery
+                document.getElementById("summery").innerHTML += event.data[0].text;
+            })
+        });
+
     </script>
 </body>
 

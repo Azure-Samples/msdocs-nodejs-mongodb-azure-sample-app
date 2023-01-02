@@ -1,0 +1,17 @@
+{
+  "name": "weolopez",
+  "version": "1.0.0",
+  "description": "openai for weo",
+  "main": "index.js",
+  "bin": {
+    "weo": "./index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "weolopez",
+  "license": "ISC"
+}

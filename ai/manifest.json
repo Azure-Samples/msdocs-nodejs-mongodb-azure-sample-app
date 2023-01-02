@@ -1,0 +1,43 @@
+{
+  "name": "A!",
+  "description": "This extension tracks your overall time spending doing household and/or taking care of your kids! This will help you prevent burnouts and stress, take your rests and get compensated for your time, effort and energy",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "favicon16.png",
+      "32": "favicon32.png"
+    }
+  },
+  "icons": {
+    "16": "favicon16.png",
+    "32": "favicon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "permissions": [
+    "tabs",
+    "scripting",
+    "activeTab",
+    "storage",
+    "notifications",
+    "contextMenus",
+    "clipboardRead",
+    "clipboardWrite"
+  ],
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+    "matches": [
+        "http://*/*",
+        "https://*/*"
+        ],
+    "js": ["content.js"],
+    "run_at": "document_end"    
+    }
+  ]
+}
