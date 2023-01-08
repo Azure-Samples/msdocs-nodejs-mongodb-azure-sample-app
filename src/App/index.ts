@@ -37,7 +37,7 @@ export async function getApp() {
 
   // view engine setup
   // app.use("/ai", express.static(root + "/ai"));
-  app.set("views", path.join(root, "root/views"));
+  app.set("views", path.join(root, "/views"));
   app.set("view engine", "pug");
 
   app.use(logger("dev"));
