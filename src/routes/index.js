@@ -4,7 +4,7 @@ var Task = require('../models/task');
 //call openai api to sumaraize the text
 const { Configuration, OpenAIApi } = require("openai");
 
-const welcome = require("../lib/welcome");
+const welcome = require('../welcome/welcome');
 var router = express.Router();
 
 /* GET home page. */
@@ -21,7 +21,6 @@ router.get('/', function (req, res, next) {
       res.send('Sorry! Something went wrong.');
     });
 });
-
 
 // return simple text
 router.get('/summarize', function (req, res, next) {
@@ -82,7 +81,6 @@ router.post('/completeTask', function (req, res, next) {
     });
 });
 
-
 router.post('/deleteTask', function (req, res, next) {
   const taskId = req.body._id;
   const completedDate = Date.now();
@@ -96,6 +94,5 @@ router.post('/deleteTask', function (req, res, next) {
       res.send('Sorry! Something went wrong.');
     });
 });
-
 
 module.exports = router;

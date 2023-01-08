@@ -3,7 +3,15 @@
     "extends": [
         "tslint:recommended"
     ],
-    "jsRules": {},
-    "rules": {},
+    "jsRules": {
+        "no-console": false,
+        "only-arrow-functions": false,
+        "no-shadowed-variable": false
+    },
+    "rules": {
+        "no-console": false,
+        "only-arrow-functions": false,
+        "no-shadowed-variable": false
+    },
     "rulesDirectory": []
 }

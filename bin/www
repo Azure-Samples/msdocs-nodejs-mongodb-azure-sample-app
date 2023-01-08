@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-var { getApp } = require("../app");
+var { getApp } = require("../lib/App/index.js");
 var debug = require("debug")("todolist:server");
 var http = require("http");
 

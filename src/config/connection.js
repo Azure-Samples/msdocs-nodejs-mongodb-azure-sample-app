@@ -41,7 +41,6 @@ async function getConnectionInfo() {
   }
 }
 
-
 module.exports = {
   getConnectionInfo
 }

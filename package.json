@@ -28,6 +28,9 @@
     "pug": "2.0.0-beta11"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
+    "@types/http-errors": "^2.0.1",
+    "@types/morgan": "^1.9.4",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",
     "tslint": "^6.1.3",

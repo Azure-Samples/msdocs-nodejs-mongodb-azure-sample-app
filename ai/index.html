@@ -27,15 +27,24 @@
 
         <!-- create button for getting clipboard and putting content in paragraph -->
         <!-- <button onclick="getClipboard()">Get Clipboard</button> -->
-        <textarea id="clipboard" style="width:100%;height: 250px;"></textarea>
-        <!-- submit button -->
-        <button onclick="submit()">Submit</button>
+        <textarea id="clipboard" maxlength="2000" style="width:100%;height: 250px;"></textarea>
+        <!-- row with submit button on the left and wordcount on the right -->
+        <div style="display: flex; justify-content: space-between;">
+            <div id="wordcount"></div>
+            <button onclick="submit()">Submit</button>
+        </div>
+
     </div>
 
     <!-- paragraph with id=summery -->
     <p id="summery"></p>
     <script src="/ai/js/index.js"> </script>
     <script>
+        //update character count as text is typed in clipboard
+        document.getElementById("clipboard").addEventListener("keydown", function () {
+            characterCount = document.getElementById("clipboard").value.length;
+            document.getElementById("wordcount").innerHTML = characterCount + '/2000 characters';
+        });
         // on change of select id="persona" update textarea with a prefix of text with the value of the select
         document.getElementById('persona').addEventListener('change', function () {
             var text = document.getElementById('persona').value;
@@ -75,7 +84,7 @@
         //url decode clickedElement.clickedElement and put it in variable text
         var text = decodeURIComponent(getQueryVariable("text"));
         var clipboard = document.getElementById("clipboard")
-        clipboard.innerText = 'you are a snarky news reporter.  create an article about the games that went as follows ' + text;
+        clipboard.innerText = (!text) ? text : '';
 
         var running = false;
         function submit() {
@@ -94,7 +103,7 @@
             })
         }
         // on blur of clipboard textarea, alert with text
-        clipboard.addEventListener("blur", submit);
+        // clipboard.addEventListener("blur", submit);
 
     </script>
 </body>

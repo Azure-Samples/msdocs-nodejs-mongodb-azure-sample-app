@@ -20,7 +20,7 @@ export class AppComponent {
 
   constructor() {
     // private sseClient: SseClient) {
-    let completion = {
+    const completion = {
       model: "text-davinci-003",
       prompt: this.prompt,
       temperature: 0,
@@ -30,9 +30,9 @@ export class AppComponent {
       presence_penalty: 0.0,
       stream: true
     }
-    let count = 0
+    const count = 0
 
-      // let aresult$ = this.sseClient.stream('https://api.openai.com/v1/completions', { keepAlive: true, reconnectionDelay: 1_000, responseType: 'event' }, { 
+      // let aresult$ = this.sseClient.stream('https://api.openai.com/v1/completions', { keepAlive: true, reconnectionDelay: 1_000, responseType: 'event' }, {
       //   body: completion,
       //   headers: new HttpHeaders({
       //     'Accept': 'event-stream',
