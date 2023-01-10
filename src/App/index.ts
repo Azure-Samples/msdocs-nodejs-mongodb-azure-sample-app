@@ -12,18 +12,16 @@ import { format } from "date-fns";
 // const welcome = require("./lib/welcome");
 import { welcome } from "../welcome/welcome";
 import { Schema, model, connect } from 'mongoose';
-
-
 // 1st party dependencies
 // let configData = require("./config/connection");
 import { getConnectionInfo } from "../config/connection";
 
 // const indexRouter = require("../routes/index");
 import indexRouter from "../routes/index";
+import crudRouter from "../routes/crud";
 
 export async function getApp() {
   const root = await getAppPath()
-  console.log(welcome+root)
   // Database
   const connectionInfo = await getConnectionInfo();
   connect(connectionInfo.DATABASE_URL);
@@ -34,6 +32,7 @@ export async function getApp() {
   app.set('port', port);
   // create a route for static html files
   app.use("/ai", express.static(root + "/ai"));
+  app.use("/test", express.static(root + "/test"));
 
   // view engine setup
   // app.use("/ai", express.static(root + "/ai"));
@@ -49,6 +48,7 @@ export async function getApp() {
   app.locals.format = format;
 
   app.use("/", indexRouter);
+  app.use("/crud", crudRouter);
   app.use("/js", express.static(root + "/node_modules/bootstrap/dist/js")); // redirect bootstrap JS
   app.use(
     "/css",
