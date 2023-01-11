@@ -5,7 +5,7 @@
         <title>Edit Persona</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="index.js"></script>
+        <script type="module" src="persona.js"></script>
         <style>
             .row {
                 display: flex;
@@ -19,9 +19,10 @@
         </style>
     </head>
     <body>
+        <button onclick="window.location.href = '/ai'">Back</button>
         <h1>Edit Persona</h1>
         <!-- dropdown for different personas-->
-        <select id="personaDropdown" onchange="selectPersona()">
+        <select id="personaDropdown">
         </select>
 
         <!-- form for editing persona make form in vertical layout -->
@@ -34,7 +35,4 @@
         </style>
         <div id="form" onsubmit="addPersona">
         </div>
-<script>
-window.addEventListener("load", onload);
-</script>
 </html>

@@ -1,5 +1,9 @@
+
+    import { PersonaDropdown } from '/ai/persona/personaDropdown.js'
+
+
 const personaType = {
-        "_id": "string",
+        "_id": "",
         "name": "", 
         "age": "", 
         "gender": "", 
@@ -7,7 +11,7 @@ const personaType = {
         "Socio_economic_status": "",
         "Preferences": "", 
         "Hobbies": "", 
-        "Past_behaviors": "",
+        "owned websites": "",
         "Attitudes": "", 
         "Beliefs": "", 
         "Lifestyle_choices": "",
@@ -28,9 +32,9 @@ const personaType = {
         "Search_preferences": "", 
         "Email_habits": ""
 }
-var personas
+// var personas
 var loaded = false
-
+var personasDropdown
 function createForm() {
     //if form doesn't exist return
     if (!document.getElementById('form')) return
@@ -71,10 +75,19 @@ function createForm() {
     submit.innerHTML = 'Submit'
     submit.onclick = addPersona
 
+    //create delete button
+    var deleteButton = document.createElement('button')
+    deleteButton.className = 'btn btn-primary'
+    deleteButton.style.margin = '10px'
+    deleteButton.innerHTML = 'Delete'
+    deleteButton.onclick = function () {
+        personasDropdown.collection.remove(JSON.parse(document.getElementById('personaDropdown').value))
+    }
     var row = document.createElement('div')
     row.className = 'row'
     row.appendChild(newButton)
     row.appendChild(submit)
+    row.appendChild(deleteButton)
     document.getElementById('form').appendChild(row)
 
 }
@@ -86,18 +99,11 @@ function onload() {
     loaded = true
     createForm()
 
-    //get personas from local storage
-    personas = JSON.parse(localStorage.getItem('personas'))
-    if (personas == null) {
-        fetch('/crud/persona').then(response => response.json()).then(lpersonas => {
-            console.log('personas', lpersonas)
-            personas = lpersonas;
-            updatePersonas()
-            
+    personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
+            populateForm(persona)
         })
-    } else {
-        updatePersonas()
-    }
+
+    
 }
 //on submit of form addPersona call addPersona function
 function addPersona() {
@@ -107,40 +113,11 @@ function addPersona() {
         let value = document.getElementById(key).value
         if (value != '') persona[key] = value
     }
-        
 
     if (!persona._id) {
-    fetch('/crud/persona', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(persona)
-    })
-        .then(response => response.json())
-        .then(data => {
-            updatePersonas(data)
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-
+        personasDropdown.collection.add(persona)
     } else {
-        //put persona to crud rest api
-        fetch('/crud/persona', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(persona)
-        })
-            .then(response => response.json())
-            .then(data => {
-                updatePersonas(data)
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        personasDropdown.collection.update(persona)
     }
 }
 
@@ -155,34 +132,11 @@ function populateForm(persona) {
     //if form doesn't exist return
     if (!document.getElementById('form')) return
 
-    for (var key in persona) {
-        if (key == '__v') continue
-        document.getElementById(key).value = persona[key]
-    }
-}
-function updatePersonas(person) {
-    if (person) {
-        //if personas has person with same id update it
-        if (personas.find(p => p._id == person._id)) {
-            personas = personas.map(p => {
-                if (p._id == person._id) return person
-                return p
-            })
-        } else {
-            //else add person to personas
-            personas.push(person)
-        }
-    }
-    localStorage.setItem('personas', JSON.stringify(personas))
 
-    //update persona dropdown
-    var personaDropdown = document.getElementById('personaDropdown')
-    personaDropdown.innerHTML = ''
-    for (var persona of personas) {
-        var option = document.createElement('option')
-        option.value = JSON.stringify(persona)
-        option.text = persona.name
-        personaDropdown.appendChild(option)
+    for (var key in personaType) {
+        if (key == '__v') continue
+        document.getElementById(key).value = (persona[key]) ? persona[key] : ''
     }
-    selectPersona()
 }
+
+ onload()
