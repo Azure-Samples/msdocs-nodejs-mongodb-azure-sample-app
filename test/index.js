@@ -4,7 +4,7 @@ function test() {
 
 //function to fetch data from the API
 function get() {
-    fetch('http://localhost:3000/crud/testCollection')
+    fetch('/crud/testCollection')
         .then(response => response.json())
         .then(data => {
             console.log(data)
@@ -14,7 +14,7 @@ function get() {
 
 //function to post data to the API
 function post() {
-    fetch('http://localhost:3000/crud/testCollection', {
+    fetch('/crud/testCollection', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -30,7 +30,7 @@ function post() {
 function put() {
     //get the id of the document to update
     let id = document.getElementById('id').value;
-    fetch(`http://localhost:3000/crud/testCollection`, {
+    fetch(`/crud/testCollection`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ function put() {
 function remove() {
     //get the id of the document to delete
     let id = document.getElementById('id').value;
-    fetch(`http://localhost:3000/crud/testCollection/${id}`, {
+    fetch(`/crud/testCollection/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
