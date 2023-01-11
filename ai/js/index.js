@@ -60,7 +60,7 @@ function getCompletion(myPrompt, callback) {
         headers: {
             "Content-Type": "application/json",
             "Accept": "event-stream",
-            'Authorization': `Bearer ${key}`
+            'Authorization': `Bearer ${openai_key}`
         },
         body: JSON.stringify({
             model: "text-davinci-003",
@@ -117,9 +117,9 @@ function cli() {
 }
 
 //if localstorage is available, use it to store key
-if (typeof localStorage !== 'undefined')  var key = localStorage.getItem('openai_key') 
+if (typeof localStorage !== 'undefined')  var openai_key = localStorage.getItem('openai_key') 
 else {
-    var key = process.env.OPENAI_KEY
+    var openai_key = process.env.OPENAI_KEY
     process.env.NODE_NO_WARNINGS = 1
     cli()
 }
