@@ -66,6 +66,8 @@ else {
     document.getElementById('not_openai_key_div').style.display = 'none';
 }
 
+// on click of button with id=saveKey, call saveKey function
+document.getElementById('saveKey').addEventListener('click', saveKey);
 // on click of button with id=saveKey, set localstorage 'openai_key' to value of input with id=openai_key
 function saveKey() {
     localStorage.setItem('openai_key', document.getElementById('openai_key').value);
