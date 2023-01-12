@@ -126,7 +126,7 @@ function selectPersona() {
 }
 
 function populateForm(persona) {
-
+    if (!persona) return
     //if form doesn't exist return
     if (!document.getElementById('form')) return
 

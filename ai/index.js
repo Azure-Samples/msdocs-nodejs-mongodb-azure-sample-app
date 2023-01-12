@@ -23,11 +23,10 @@ let selectedMedia
 
 clipboard.innerText = (!text) ? text : '';
 var running = false;
-var token = localStorage.getItem('openai_key')     
-token = 'sk'+token.substring(token.indexOf('-')+1)  
-var historyCollection = new Collection(token, (history) => {
-    console.log('history')
-})
+
+//if token is null return    
+
+
 //for each key in media add a new option to select with id=media
 for (var key in media) {
     var option = document.createElement('option')
@@ -74,6 +73,8 @@ function saveKey() {
     localStorage.setItem('openai_key', document.getElementById('openai_key').value);
     document.getElementById('openai_key_div').style.display = 'none';
     document.getElementById('not_openai_key_div').style.display = 'block';
+    //reload page
+    location.reload();
 }
 
 function getQueryVariable(variable) {
@@ -143,3 +144,12 @@ function updateTextLength() {
 var personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
     selectPerson(persona)
 })
+function getCollectionHistory() {
+    var token = localStorage.getItem('openai_key')
+    if (token == null) return 
+    token = 'sk' + token.substring(token.indexOf('-') + 1)
+    return new Collection(token, (history) => {
+        console.log('history')
+    })
+}
+var historyCollection = getCollectionHistory()

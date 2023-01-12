@@ -21,6 +21,10 @@ export class PersonaDropdown {
 
     }
     updatePersonas(personas) {
+        // personas is not an array return
+        if (!Array.isArray(personas)) {
+            return
+        }
         this.personasDropdown.innerHTML = ''
         personas.forEach(persona => {
             let option = document.createElement('option')

@@ -3,20 +3,21 @@ import { PersonaDropdown } from '/ai/persona/personaDropdown.js'
 import { Collection } from '/ai/collection/collection.js'
 
 var personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
-    console.log( 'JSON.stringify(persona)')
-    })
-var token = localStorage.getItem('openai_key')        
-//update token for substring after '-' in token
-token = 'sk'+token.substring(token.indexOf('-')+1)
-var historyCollection = new Collection(token, (history) => {
-    console.log('history')
+    console.log('JSON.stringify(persona)')
 })
-var records = historyCollection.get().then( (history) => {
-    //for each record in history call addRecord function
-    history.forEach((record) => {
-        addRecord(record)
+var historyCollection
+var records 
+function loadHistory() {
+
+    historyCollection = getCollectionHistory()
+    if (historyCollection == null) return
+    records = historyCollection.get().then((history) => {
+        //for each record in history call addRecord function
+        history.forEach((record) => {
+            addRecord(record)
+        })
     })
-})
+}
 function addRecord(record) {
     //create a new li element with record.persona as the text
     var li = document.createElement('li')
@@ -26,7 +27,7 @@ function addRecord(record) {
     //create a new div with record.prompt
     var prompt = document.createElement('div')
     prompt.innerText = record.prompt
-    
+
     //create a new div with record.completion hidden
     var completion = document.createElement('div')
     completion.innerText = record.completion
@@ -36,13 +37,22 @@ function addRecord(record) {
     li.appendChild(prompt)
     li.appendChild(completion)
     //on click of li toggle visibility of completion
-    li.addEventListener('click', function() {
+    li.addEventListener('click', function () {
         if (completion.style.display == 'none') {
             completion.style.display = 'block'
         } else {
             completion.style.display = 'none'
-        }   
+        }
     })
     //append li to ul with id=history
     document.getElementById('historyList')?.appendChild(li)
 }
+function getCollectionHistory() {
+    var token = localStorage.getItem('openai_key')
+    if (token == null) return 
+    token = 'sk' + token.substring(token.indexOf('-') + 1)
+    return new Collection(token, (history) => {
+        console.log('history')
+    })
+}
+loadHistory()

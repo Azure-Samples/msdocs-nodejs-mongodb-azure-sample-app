@@ -38,8 +38,8 @@ export class Collection {
             console.log("error");
         })
         .then( data => {
-            localStorage.setItem(this.collection, JSON.stringify(data))
-            if (this.watchCallback) this.watchCallback(data)
+            // localStorage.setItem(this.collection, JSON.stringify(data))
+            if (this.watchCallback) this.get()
             return data
         })
     }
@@ -51,8 +51,8 @@ export class Collection {
             body: JSON.stringify(obj)
         }).then(response => response.json())
         .then( data => {
-            localStorage.setItem(this.collection, JSON.stringify(data))
-            if (this.watchCallback) this.watchCallback(data)
+            // localStorage.setItem(this.collection, JSON.stringify(data))
+            if (this.watchCallback) this.get()
             return data
         })
     }
