@@ -19,6 +19,7 @@ let personaTextArea = document.getElementById('person')
 let submitButton = document.getElementById('submit')
 //assign mediaType to value of select with id=media
 let mediaType = document.getElementById('media')
+let selectedMedia
 
 clipboard.innerText = (!text) ? text : '';
 var running = false;
@@ -29,7 +30,7 @@ var historyCollection = new Collection(token, (history) => {
 //for each key in media add a new option to select with id=media
 for (var key in media) {
     var option = document.createElement('option')
-    option.value = media[key]       
+    option.value = JSON.stringify({key:key,value:media[key]})       
     option.innerText = key
     document.getElementById('media').appendChild(option)
     selectMedia()
@@ -46,8 +47,8 @@ submitButton.addEventListener('click', submit)
 mediaType.addEventListener('change', selectMedia)
 
 function selectMedia() {
- 
-    maxLength=Number(document.getElementById('media').value)
+    selectedMedia = JSON.parse(mediaType.value)
+    maxLength=Number(selectedMedia.value)
     // set the max length of textarea with id=clipboard to value of select with id=media
     clipboard.setAttribute('maxLength', maxLength)
     document.getElementById("wordcount").innerHTML = characterCount + `/${maxLength} characters`;
@@ -93,10 +94,10 @@ function submit() {
     running = true;
     document.getElementById("summery").innerHTML = ''
     let prompt = clipboard.value
-    let persona = `create a ${mediaType.textContent} written by ${personaTextArea.value} about`
+    let persona = `create a ${selectedMedia.key} written by${personaTextArea.value} about`
     //get a length of the prompt
     let promptLength = prompt.length
-    prompt = persona.substring(0,maxLength-prompt.length-1) + prompt
+    prompt = persona.substring(0,maxLength-prompt.length)+" "+ prompt
     let size = 4000 - maxLength
     getCompletion(prompt, size, event => {
         if (event.data[0].finish_reason === 'stop') {
@@ -119,8 +120,6 @@ function selectPerson() {
     person = JSON.parse(document.getElementById('personaDropdown').value)
     delete person._id
     attribues=JSON.stringify(person)
-    //remove quotes from string
-    attribues=attribues.replace(/['"{}]+/g, '')
     //remove the string '__v:0'
     attribues=attribues.replace(/__v:0/g, '')
     //remove the string ',,'

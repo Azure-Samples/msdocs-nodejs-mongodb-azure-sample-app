@@ -28,19 +28,19 @@ function addRecord(record) {
     //create a new div with record.completion hidden
     var completion = document.createElement('div')
     completion.innerText = record.completion
-    completion.style.visibility = 'hidden'
+    completion.style.display = 'none'
     //append div to li
     li.appendChild(persona)
     li.appendChild(prompt)
     li.appendChild(completion)
     //on click of li toggle visibility of completion
     li.addEventListener('click', function() {
-        if (completion.style.visibility == 'hidden') {
-            completion.style.visibility = 'visible'
+        if (completion.style.display == 'none') {
+            completion.style.display = 'block'
         } else {
-            completion.style.visibility = 'hidden'
+            completion.style.display = 'none'
         }   
     })
     //append li to ul with id=history
-    document.getElementById('historyList').appendChild(li)
+    document.getElementById('historyList')?.appendChild(li)
 }
