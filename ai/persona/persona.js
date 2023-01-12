@@ -102,8 +102,6 @@ function onload() {
     personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
             populateForm(persona)
         })
-
-    
 }
 //on submit of form addPersona call addPersona function
 function addPersona() {

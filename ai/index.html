@@ -19,9 +19,9 @@
 
     <div id="not_openai_key_div" style="display: none;">
         <!-- dropdown with id=persona and values including snarky reporter, assistant and professional business leader -->
-        <select id="media" onchange="selectMedia()">
+        <select id="media" >
         </select>
-        <select id="personaDropdown" onchange="selectPerson()">
+        <select id="personaDropdown" >
         </select>
         
         <button onclick="localStorage.removeItem('personas');window.location.href = '/ai/persona'">edit</button>
@@ -34,7 +34,7 @@
         <!-- row with submit button on the left and wordcount on the right -->
         <div style="display: flex; justify-content: space-between;">
             <div id="wordcount"></div>
-            <button onclick="submit()">Submit</button>
+            <button id="submit">Submit</button>
         </div>
 
     </div>
@@ -43,13 +43,9 @@
     <p id="summery"></p>
     <script src="/ai/ai/ai.js"> </script>
     <script type="module" src="/ai/persona/persona.js"> </script>
-    <script src="/ai/index.js"> </script>
+    <script type="module" src="/ai/history/history.js"> </script>
+    <script type="module" src="/ai/index.js"> </script>
 
-    <script>
-        window.addEventListener("load", onload);
-        //delete localstorage.personas
-        
-    </script>
 </body>
 
 </html>

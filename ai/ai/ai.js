@@ -47,7 +47,7 @@ function makeWriteableEventStream(eventTarget) {
     })
 }
 
-function getCompletion(myPrompt, callback) {
+function getCompletion(myPrompt, max_tokens, callback) {
 
     const eventTarget = new EventTarget()
     const jsonDecoder = makeJsonDecoder()
@@ -66,7 +66,7 @@ function getCompletion(myPrompt, callback) {
             model: "text-davinci-003",
             prompt: myPrompt,
             temperature: 0.5,
-            max_tokens: 1024,
+            max_tokens: max_tokens,
             n: 1,
             stop: 'none',
             stream: true
@@ -91,7 +91,7 @@ function cli() {
 
     //if argements are passed, use them as prompt
     if (args) {
-        getCompletion(args, (event) => {
+        getCompletion(args, 2000, (event) => {
             if (event.data[0].finish_reason !== 'stop' )
                 process.stdout.write(event.data[0].text)
         })
@@ -108,7 +108,7 @@ function cli() {
         console.log('Please set OPENAI_KEY environment variable to your OpenAI API key')
     }
     readline.question('Prompt: ', (prompt) => {
-        getCompletion(prompt, (event) => {
+        getCompletion(prompt, 2000, (event) => {
             if (event.data[0].finish_reason !== 'stop' ) 
                  process.stdout.write(event.data[0].text)
         })

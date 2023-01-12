@@ -31,9 +31,10 @@ export class Collection {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obj)
-        }).then(response => {
-            let data = response.json()
-            if (this.watchCallback) this.get()
+        }).then(response => response.json())
+        .then( data => {
+            localStorage.setItem(this.collection, JSON.stringify(data))
+            if (this.watchCallback) this.watchCallback(data)
             return data
         })
     }
@@ -43,9 +44,10 @@ export class Collection {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obj)
-        }).then(response => {
-            let data = response.json()
-            if (this.watchCallback) this.get()
+        }).then(response => response.json())
+        .then( data => {
+            localStorage.setItem(this.collection, JSON.stringify(data))
+            if (this.watchCallback) this.watchCallback(data)
             return data
         })
     }
