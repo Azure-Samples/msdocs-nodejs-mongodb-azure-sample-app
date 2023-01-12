@@ -3,11 +3,13 @@ import { PersonaDropdown } from '/ai/persona/personaDropdown.js'
 import { Collection } from '/ai/collection/collection.js'
 
 var personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
-    console.log( JSON.stringify(persona))
+    console.log( 'JSON.stringify(persona)')
     })
 var token = localStorage.getItem('openai_key')        
+//update token for substring after '-' in token
+token = 'sk'+token.substring(token.indexOf('-')+1)
 var historyCollection = new Collection(token, (history) => {
-    console.log(history)
+    console.log('history')
 })
 var records = historyCollection.get().then( (history) => {
     //for each record in history call addRecord function

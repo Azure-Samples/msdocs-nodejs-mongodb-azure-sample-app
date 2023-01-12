@@ -23,9 +23,10 @@ let selectedMedia
 
 clipboard.innerText = (!text) ? text : '';
 var running = false;
-var token = localStorage.getItem('openai_key')       
+var token = localStorage.getItem('openai_key')     
+token = 'sk'+token.substring(token.indexOf('-')+1)  
 var historyCollection = new Collection(token, (history) => {
-    console.log(history)
+    console.log('history')
 })
 //for each key in media add a new option to select with id=media
 for (var key in media) {

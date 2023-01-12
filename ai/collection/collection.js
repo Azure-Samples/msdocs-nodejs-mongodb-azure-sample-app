@@ -31,7 +31,12 @@ export class Collection {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obj)
-        }).then(response => response.json())
+        }).then(response => {
+            let j = response.json()
+            return j
+        }).catch(function() {
+            console.log("error");
+        })
         .then( data => {
             localStorage.setItem(this.collection, JSON.stringify(data))
             if (this.watchCallback) this.watchCallback(data)
