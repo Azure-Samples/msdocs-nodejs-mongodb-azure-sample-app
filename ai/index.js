@@ -124,6 +124,8 @@ function selectPerson() {
     person = JSON.parse(document.getElementById('personaDropdown').value)
     delete person._id
     attribues=JSON.stringify(person)
+    // remove the string '"' and '{' and '}'
+    attribues=attribues.replace(/[{}"]/g, '')
     //remove the string '__v:0'
     attribues=attribues.replace(/__v:0/g, '')
     //remove the string ',,'
