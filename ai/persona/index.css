@@ -1,0 +1,93 @@
+#tabArea {
+    width: 95%;
+    height: 400px;
+    padding: 20px;
+    margin: 22px;
+}
+main {
+    height:80vh;
+    background: lightgray;
+    overflow: scroll;
+}
+
+#bodyHeader {
+    background: white;
+    padding: 0px 20px 0px 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+#jsoneditor {
+    height: 90%;
+}
+.save {
+    margin-top: 5px
+}
+
+
+.media-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    background: lightgray;
+}
+
+.media-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: white;
+}
+
+#blogs {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: white;
+}
+#tweet {
+    display: none;
+}
+tabs {
+    width:100%;
+    height: 100vh;
+    border: 1px groove;
+    display: block;
+    background: lightgrey;
+}
+.nav-tabs {
+    margin-left: 10px;
+    margin-top: 10px;
+}
+#promptArea{
+    width: 95%;
+    height: 250px;
+    background: white;
+    margin: 0 10px 10px 10px;
+}
+textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+#summery {
+    width: 95%;
+    height: 250px;
+    background: white;
+    margin: 0 10px 10px 10px;
+}
+#editorType {
+    margin-top: 10px;
+    float: right;
+}

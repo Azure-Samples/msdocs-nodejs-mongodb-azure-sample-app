@@ -1,69 +1,81 @@
+import { get, post, put, remove, getNames, getByName, upsert } from '/ai/collection/document.js'
+
 //create javascript class
 export class Collection {
-    collection;
-    watchCallback;
-    constructor(lcollection, lwatchCallback) {
-        this.collection = lcollection;
-        this.watchCallback = lwatchCallback;
+    collection
+    callback
 
-        let data = localStorage.getItem(this.collection);
-        if (data == null || data.length < 3 
-        ) {
-            this.get()
-        } else {
-            if (this.watchCallback) this.watchCallback(JSON.parse(data))
-        }
+    constructor(collection, callback) {
+        this.callback = callback;
+        this.collection = collection;
     }
-    //function to fetch data from the API
-    async get() {
-        return await fetch(`/crud/${this.collection}`)
-            .then(response =>response.json())
-            .then( data => {
-                localStorage.setItem(this.collection, JSON.stringify(data))
-                if (this.watchCallback) this.watchCallback(data)
-                return data
-            })
+
+    get(id = '') {
+        let data = localStorage.getItem(this.collection + id);
+        if (data == null || data.length < 3) {
+            return get(this.collection, id)
+                .then(data => {
+                    localStorage.setItem(this.collection + id, JSON.stringify(data))
+                    if (this.callback) this.callback(data)
+                    return data
+                })
+        } else {
+            if (this.callback) this.callback(JSON.parse(data))
+            return JSON.parse(data)
+        }
     }
 
     //function to post data to the API
-    async add(obj) {
-        return await fetch(`/crud/${this.collection}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(obj)
-        }).then(response => {
-            let j = response.json()
-            return j
-        }).catch(function() {
-            console.log("error");
-        })
-        .then( data => {
-            // localStorage.setItem(this.collection, JSON.stringify(data))
-            if (this.watchCallback) this.get()
-            return data
+    add(obj) {
+        post(this.collection, obj).then(data => {
+            if (this.callback) {
+                localStorage.removeItem(this.collection)
+                this.get(data._id)
+            }
         })
     }
     //function to update data in the API
     async update(obj) {
-        return await fetch(`/crud/${this.collection}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(obj)
-        }).then(response => response.json())
-        .then( data => {
-            // localStorage.setItem(this.collection, JSON.stringify(data))
-            if (this.watchCallback) this.get()
-            return data
+        put(this.collection, obj).then(data => {
+            if (this.callback) {
+                localStorage.removeItem(this.collection + obj._id)
+                localStorage.removeItem(this.collection)
+                this.get(obj._id)
+            }
+        })
+    }
+    async upsert(obj, arrayName) {
+        upsert(this.collection, arrayName, obj).then(data => {
+            if (this.callback) {
+                localStorage.removeItem(this.collection + obj._id)
+                localStorage.removeItem(this.collection)
+                this.get(obj._id)
+            }
         })
     }
     async remove(obj) {
-        let id = obj._id;
-        return await fetch(`/crud/${this.collection}/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        }).then(response => {
-            if (this.watchCallback) this.get()
-            return response
-        });
+        remove(this.collection, obj).then(data => {
+            if (this.callback) {
+                localStorage.removeItem(this.collection+obj._id)
+                localStorage.removeItem(this.collection)
+                this.get()
+            }
+        })
     }
+    async getNames() {
+        return await getNames().then(data => {
+            if (this.callback) this.callback(data)
+            return data
+        })
+    }
+    async getByName(name) {
+        return await getByName(name).then(data => {
+            if (this.callback) this.callback(data)
+            return data
+        }) .catch(err => {
+            console.error(err)
+        })
+    }
+
 }
+

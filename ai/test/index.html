@@ -1,0 +1,117 @@
+<!-- basic html template -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <h1>Test</h1>
+    <textarea id="data" style="width: 100%;height: 250px;">Test</textarea>
+
+    <label for="name">Name</label>
+    <input type="text" id="name">
+
+    <button onclick="getNames()">Names</button>
+    <button onclick="getByName()">Get by Name</button>
+
+    <br>
+
+    <button onclick="get()">Get</button>
+    <button onclick="post()">Post</button>
+
+    <label for="id">ID</label>
+    <input type="text" id="id">
+
+    <button onclick="put()">Put</button>
+
+    <button onclick="upsert()">Upsert</button>
+
+    <button onclick="remove()">Delete</button>
+    <!-- button to clear localstorage -->
+    <button onclick="localStorage.clear()">Clear</button>
+
+    <br>
+
+    <button onclick="testAI()">Test AI</button>
+    <button onclick="weoai()">POST AI</button>
+
+</body>
+
+    <script type="module">
+        import { getNames, getByName, get, post, put, remove } from '/ai/collection/document.js';
+        import { Collection } from '/ai/collection/collection.js';
+
+        let poster = (data) => {
+            console.log(data);
+            document.getElementById('data').value = JSON.stringify(data);
+        }
+
+            let collection = new Collection('cms', poster)
+            // let collection = new Collection('cms', poster)
+
+        window.get = () => {
+            let id = document.getElementById('id').value;
+            if (!collection) get('cms', id).then(poster)
+            else collection.get(id)
+        }
+
+        window.post = () => {
+            let obj = JSON.parse(document.getElementById('data').value)
+            if (!collection) post('cms', obj).then(poster)
+            else collection.add(obj)
+        }
+
+        window.put = () => {
+            let obj = JSON.parse(document.getElementById('data').value)
+            if (!collection) put('cms', obj)
+                .then(poster)
+            else collection.update(obj)
+        }
+        window.upsert = () => {
+            let obj = JSON.parse(document.getElementById('data').value)
+            if (!collection) upsert('cms', 'history', obj, true)
+                .then(poster)
+            else collection.upsert(obj, 'history')
+        }
+        window.remove = () => {
+            let obj = JSON.parse(document.getElementById('data').value)
+            if (!collection) remove('cms', obj).then(poster)
+            else collection.remove(obj)
+        }
+
+        window.getNames = () => {
+            if (!collection) getNames().then(poster)
+            else collection.getNames()
+        }
+        window.getByName = () => {
+            let name = document.getElementById('name').value;
+            if (!collection) getByName(name).then(poster)
+            else collection.getByName(name)
+        }
+    </script>
+
+    <script type="module">
+        import { getNames, getByName, get, post, put, remove } from '/ai/collection/document.js';
+        import { testAI, weoai } from '/ai/ai/weo.js';
+
+        let present = (data) => {
+            data = data.completion.choices[0].text
+            console.log(data);
+            if (typeof data === 'string') 
+                document.getElementById('data').value = data;
+            else document.getElementById('data').value = JSON.stringify(data,2,2);
+        }
+        
+        window.testAI = () => {
+            testAI().then(present)
+        }
+       
+        window.weoai = () => {
+            weoai(document.getElementById('data').value).then(present)
+        } 
+    </script>
+</html>

@@ -1,0 +1,88 @@
+.media-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.media-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#blogs {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#tweet {
+    display: none;
+}
+
+
+.nav-tabs {
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+#promptArea {
+    width: 95%;
+    height: 60vh;
+    /* background: white; */
+    margin: 0 10px 10px 10px;
+}
+
+textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    /* background: white; */
+}
+
+#summery {
+    width: 95%;
+    height: 70vh;
+    /* background: white; */
+    margin: 0 10px 10px 10px;
+}
+
+.historyOutput {
+    width: 95%;
+    height: 70vh;
+    /* background: white; */
+    margin: 0 10px 10px 10px;
+}
+
+/* #submit {
+    float: right;
+    margin-top: 10px;
+} */
+
+.marginRight {
+    margin: 10px;
+}
+
+
+.blue {
+    color: #0d6efd;
+}
+
+#jsoneditor {
+    /* top: 56px; */
+    transition-property: top;
+    transition-duration: 1s;
+    width: 100%;
+    height: 450px;
+    display: block;
+    position: absolute;
+    top: -400px;
+    position: absolute;
+}

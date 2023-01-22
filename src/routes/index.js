@@ -31,6 +31,7 @@ router.get('/summarize', function (req, res, next) {
   const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY
   });
+
   const openai = new OpenAIApi(configuration);
 
   const completion = openai.createCompletion({
@@ -39,8 +40,11 @@ router.get('/summarize', function (req, res, next) {
     temperature: 0.9,
     max_tokens: 2000,
   }).then((completion) => {
-    console.log(completion.data.choices[0].text);
-    res.send(completion.data.choices[0].text);
+    console.log(completion.data);
+    res.send(completion.data);
+  }).catch((err) => {
+    console.log(err);
+    res.send('Sorry! Something went wrong.');
   })
 })
 

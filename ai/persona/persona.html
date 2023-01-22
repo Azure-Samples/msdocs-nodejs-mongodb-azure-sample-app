@@ -1,0 +1,38 @@
+<!-- basic html template -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Edit Persona</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="module" src="persona.js"></script>
+        <style>
+            .row {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: stretch;
+                align-content: stretch;
+                margin: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <button onclick="window.location.href = '/ai'">Back</button>
+        <h1>Edit Persona</h1>
+        <!-- dropdown for different personas-->
+        <select id="personaDropdown">
+        </select>
+
+        <!-- form for editing persona make form in vertical layout -->
+        <style>
+            .form {
+                display: flex;
+                flex-direction: column;
+            }
+
+        </style>
+        <div id="form" onsubmit="addPersona">
+        </div>
+</html>

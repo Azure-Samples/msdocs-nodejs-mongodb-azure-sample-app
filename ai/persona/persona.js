@@ -1,41 +1,22 @@
 
-    import { PersonaDropdown } from '/ai/persona/personaDropdown.js'
+import { PersonaDropdown } from '/ai/persona/personaDropdown.js'
+import { CMS } from '/ai/collection/cms.js'
+// import { Collection } from '/ai/collection/collection.js'
 
 
-const personaType = {
-        "_id": "",
-        "name": "", 
-        "age": "", 
-        "gender": "", 
-        "Location": "", 
-        "Socio_economic_status": "",
-        "Preferences": "", 
-        "Hobbies": "", 
-        "owned websites": "",
-        "Attitudes": "", 
-        "Beliefs": "", 
-        "Lifestyle_choices": "",
-        "Driving_forces": "", 
-        "Aspirations": "",
-        "Short_term_objectives": "", 
-        "Long_term_ambitions": "",
-        "Pain_points": "", 
-        "Roadblocks": "", 
-        "Struggles": "",
-        "Frequency": "", 
-        "Spend_amounts": "", 
-        "Online_vs_in_store": "",
-        "Navigation": "", 
-        "Understanding": "", 
-        "Usage": "",
-        "Social_platforms": "", 
-        "Search_preferences": "", 
-        "Email_habits": ""
-}
+let cms = new CMS()
+let data = cms.get('personaType').then((data) => {
+    createForm(data)
+    personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
+        populateForm(persona)
+    })
+})
+
+
 // var personas
 var loaded = false
 var personasDropdown
-function createForm() {
+function createForm(personaType) {
     //if form doesn't exist return
     if (!document.getElementById('form')) return
 
@@ -65,7 +46,7 @@ function createForm() {
     newButton.style.margin = '10px'
     newButton.innerHTML = 'New'
     newButton.onclick = function () {
-        populateForm(personaType)
+        populateForm(cms.personaType)
     }
 
     //create submit button
@@ -92,22 +73,11 @@ function createForm() {
 
 }
 
-
-//onload fetch personas from crud rest api and update persona dropdown
-function onload() {
-    if (loaded) return
-    loaded = true
-    createForm()
-
-    personasDropdown = new PersonaDropdown('personaDropdown', (persona) => {
-            populateForm(persona)
-        })
-}
 //on submit of form addPersona call addPersona function
 function addPersona() {
 
     var persona = {}
-    for (var key in personaType) {
+    for (var key in cms.personaType) {
         let value = document.getElementById(key).value
         if (value != '') persona[key] = value
     }
@@ -131,10 +101,8 @@ function populateForm(persona) {
     if (!document.getElementById('form')) return
 
 
-    for (var key in personaType) {
+    for (var key in cms.personaType) {
         if (key == '__v') continue
         document.getElementById(key).value = (persona[key]) ? persona[key] : ''
     }
 }
-
- onload()

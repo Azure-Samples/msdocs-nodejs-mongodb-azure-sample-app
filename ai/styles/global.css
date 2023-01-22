@@ -1,0 +1,156 @@
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: rgb(68 70 84) !important;
+    color: #fff;
+  }
+
+  .nav-tabs .nav-item.show .nav-link,
+  .nav-tabs .nav-link.active {
+    background-color: #343541;
+    color: #fff;
+    border: none;
+  }
+
+  .nav-link {
+    color: white;
+    border: none;
+    outline: none;
+  }
+
+  .nav-tabs .nav-link {
+    border: none;
+    outline: none;
+  }
+
+  .nav-tabs .nav-item.show .nav-link,
+  .nav-tabs :hover {
+    background: #2a2b35;
+    /* outline: groove #343541; */
+    color: white;
+  }
+
+  .paper {
+    background-color: #343541;
+    color: #fff;
+    border: none;
+    transform: translateY(-1px);
+  }
+
+  .sidebar {
+    background-color: rgba(68 70 84) !important;
+    --tw-text-opacity: 1;
+    color: rgba(236, 236, 241);
+  }
+
+  a {
+    color: #fff;
+  }
+
+  .form-select {
+    background-color: #343541 !important;
+    color: rgba(236, 236, 241) !important;
+    border: none;
+    margin: 5px;
+  }
+
+  main {
+    background: rgb(68 70 84);
+    border: none;
+  }
+
+  .tabs {
+    background-color: rgb(68 70 84) !important;
+    color: rgba(236, 236, 241);
+    border: none;
+  }
+
+  .footer {
+    background-color: rgb(68 70 84) !important;
+    color: rgba(236, 236, 241);
+  }
+
+  #firstTabs>ul {
+    background-color: rgb(68 70 84) !important;
+    color: rgba(236, 236, 241);
+    border: none;
+  }
+
+  .navbar {
+    background-color: rgb(68 70 84) !important;
+  }
+}
+
+#body {
+  margin-top: 55px !important;
+}
+
+main {
+  padding: 0 0 0 0 !important;
+  margin-bottom: 60px;
+  position: fixed;
+  right: 0;
+}
+
+.navbar-brand {
+  margin-left: 30px;
+}
+
+.toggle.ios,
+.toggle-on.ios,
+.toggle-off.ios {
+  border-radius: 20rem;
+}
+
+.toggle.ios .toggle-handle {
+  border-radius: 20rem;
+}
+
+.sidebar {
+  /* margin-top: 10px; */
+  z-index: 0;
+  height: 100vh;
+  width: 185px;
+}
+
+tabs {
+  width: 100%;
+  height: 100vh;
+  /* border: 1px groove; */
+  display: block;
+}
+
+#wordcount {
+  transform: translateY(-10px);
+}
+
+/* textarea remove border on focus */
+textarea:focus {
+  outline: none;
+  border: none;
+}
+
+footer {
+  float: right;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  /* justify-content: flex-start; */
+  align-items: center;
+  /* align-content: stretch; */
+  justify-content: space-between;
+  background-color: black;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  /* Set the fixed height of the footer here */
+  line-height: 60px;
+  padding: 25px;
+  /* Vertically center the text there */
+}
+
+.footer.container {
+  max-width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}

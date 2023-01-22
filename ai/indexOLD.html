@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="version" content="1.0.0">
+    <meta name="id" content="ai">
+    <title>A!</title>
+</head>
+
+<body>
+    <h1>AI v1.10</h1>
+
+    <!-- create a div that is only shown if localstorage doesn't have 'openai_key' -->
+    <div id="openai_key_div" style="display: none;">
+        <label for="openai_key">OpenAI Key</label>
+        <input type="text" id="openai_key" />
+        <button id="saveKey">Save Key</button>
+    </div>
+
+
+    <div id="not_openai_key_div" style="display: none;">
+        <!-- dropdown with id=persona and values including snarky reporter, assistant and professional business leader -->
+        <!-- <select id="media" >
+        </select> -->
+
+        <select id="mediaType" data-modules="dropdown" class="cms custom-select">
+        </select>
+        
+        <select id="personaDropdown" >
+        </select>
+
+        
+        <button onclick="localStorage.removeItem('personas');window.location.href = '/ai/persona'">edit</button>
+        <button onclick="window.location.href = '/ai/history'">history</button>
+        <textarea id="person" maxlength="1000" style="width:100%;height: 250px;"></textarea>
+        
+        <!-- create button for getting clipboard and putting content in paragraph -->
+        <!-- <button onclick="getClipboard()">Get Clipboard</button> -->
+        <textarea id="clipboard" maxlength="1000" style="width:100%;height: 250px;"></textarea>
+        <!-- row with submit button on the left and wordcount on the right -->
+        <div style="display: flex; justify-content: space-between;">
+            <div id="wordcount"></div>
+            <button id="submit">Submit</button>
+        </div>
+        <div id="editToggle" style="display: none;">
+            <!-- add toggle for edit mode-->
+            <input type="checkbox" data-toggle="toggle" data-style="ios">
+        </div>
+    </div>
+
+    <!-- paragraph with id=summery -->
+    <p id="summery"></p>
+    <script src="/ai/ai/ai.js"> </script>
+    <script type="module" src="/ai/persona/persona.js"> </script>
+    <script type="module" src="/ai/history/history.js"> </script>
+    <script type="module" src="/ai/index.js"> </script>
+
+</body>
+
+</html>

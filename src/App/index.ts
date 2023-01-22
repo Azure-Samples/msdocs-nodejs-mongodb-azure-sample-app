@@ -18,6 +18,7 @@ import { getConnectionInfo } from "../config/connection";
 
 // const indexRouter = require("../routes/index");
 import indexRouter from "../routes/index";
+import weoRouter from "../routes/weo";
 import crudRouter from "../routes/crud";
 
 export async function getApp() {
@@ -48,6 +49,7 @@ export async function getApp() {
   app.locals.format = format;
 
   app.use("/", indexRouter);
+  app.use("/weo", weoRouter);
   app.use("/crud", crudRouter);
   app.use("/js", express.static(root + "/node_modules/bootstrap/dist/js")); // redirect bootstrap JS
   app.use(
