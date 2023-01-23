@@ -33,10 +33,10 @@ export class dropdown extends Component {
         //if options is a string then return
         if (typeof this.data === 'string') return
         //create the first option select as the default
-        let option = document.createElement('option')
-        option.value = ''
-        option.innerHTML = this.id
-        this.element.appendChild(option)
+        // let option = document.createElement('option')
+        // option.value = ''
+        // option.innerHTML = this.id
+        // this.element.appendChild(option)
         
         this.callback = callback
         // if options is an object then get the values
@@ -72,5 +72,13 @@ export class dropdown extends Component {
         })
         //call the callback with the first option
         // this.callback(this.element.options[0].innerHTML, this.element.options[0].value)
+    }
+    setCallback(callback) {
+        this.callback = callback
+
+        //simulate a click on the first option
+        this.element.selectedIndex = 1
+        callback(this.element.options[1].innerHTML, this.element.options[1].value)
+
     }
 }

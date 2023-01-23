@@ -13,18 +13,19 @@ let mediaType;
 await cms.initComponents().then(() => {
   console.log('cms ready')
 
-  cms.page.componentObject.mediaType.callback = (key, value) => {
+  cms.page.componentObject.mediaType.setCallback( (key, value) => {
     console.log('mediaType callback', key, value)
     mediaType = JSON.parse(value)
     maxLength = Number(value)
     clipboard.value = mediaType + persona
-  }
-  cms.page.componentObject.persona.callback = (key, value) => {
+  })
+  
+  cms.page.componentObject.persona.setCallback( (key, value) => {
     console.log('persona callback', key, value)
     value = JSON.parse(value)
     persona = value
     clipboard.value = mediaType + persona.prompt
-  }
+  })
 })
 
 
@@ -97,4 +98,28 @@ function copy() {
 
   upsert('history', 'history', obj).then( out =>
     console.log('upserted', out))
+}
+
+
+
+// if localstorage has 'openai_key' hide div with id=openai_key_div
+if (localStorage.getItem('openai_key')) {
+  document.getElementById('openai_key_div').style.display = 'none';
+  // document.getElementById('not_openai_key_div').style.display = 'block';
+}
+// if localstorage doesn't have 'openai_key' show div with id=openai_key_div
+else {
+  document.getElementById('openai_key_div').style.display = 'block';
+  // document.getElementById('not_openai_key_div').style.display = 'none';
+}
+
+// on click of button with id=saveKey, call saveKey function
+document.getElementById('saveKey').addEventListener('click', saveKey);
+// on click of button with id=saveKey, set localstorage 'openai_key' to value of input with id=openai_key
+function saveKey() {
+  localStorage.setItem('openai_key', document.getElementById('openai_key').value);
+  document.getElementById('openai_key_div').style.display = 'none';
+  // document.getElementById('not_openai_key_div').style.display = 'block';
+  //reload page
+  location.reload();
 }

@@ -51,11 +51,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <label>Personas</label>
                             <select id="persona" data-collection="personas" data-modules="dropdown"
                                 class="cms form-select">
                             </select>
                         </li>
                         <li class="nav-item">
+                            <label>Media Types</label>
                             <select id="mediaType" data-modules="dropdown" class="cms form-select">
                             </select>
                         </li>
@@ -72,6 +74,12 @@
             </nav>
 
             <main role="main" class="col-md-9 ml-sm-auto col-lg-10">
+                
+                <div id="openai_key_div" style="display: none;">
+                    <label for="openai_key">OpenAI Key</label>
+                    <input type="text" id="openai_key" />
+                    <button id="saveKey">Save Key</button>
+                </div>
 
                 <tabs id="firstTabs" class="cms" data-modules="tabs">
                     <div id="promptArea" name="Prompt Area">
@@ -89,7 +97,9 @@
         </div>
     </div>
     <footer class=" promptBtnGrp">
-        <input id="editToggle" style="display: none;" type="checkbox" data-toggle="toggle" data-style="ios">
+        <div id="editToggle" style="display: none;" >
+            <input id="editButton" type="checkbox" data-toggle="toggle" data-style="ios">
+        </div>
 
         <div class="promptBtnGrp">
             <button id="copy" class="marginRight btn btn-primary btn-sm"><i
