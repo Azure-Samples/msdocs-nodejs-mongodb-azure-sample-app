@@ -26,7 +26,10 @@ export async function upsert(collection: string, arrName: string, data: any) {
     o[arrName]= data[arrName]
     console.log("obj", o)
     if (obj) return await getModel(collection).findOneAndUpdate({_id:obj._id}, {$push: o}).exec();
-    else return post(collection, data);
+    else {
+        data[arrName] = [data[arrName]]
+        return post(collection, data);
+    }
 }
 export async function remove(collection: string, id: string) {
     return  await getModel(collection).deleteOne({_id:id}).exec()

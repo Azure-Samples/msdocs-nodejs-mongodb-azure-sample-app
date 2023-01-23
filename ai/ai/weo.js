@@ -31,8 +31,9 @@ export const modelJSON = {
       "max_tokens": 4000
     }
 }
-export async function weoai(prompt, max_tokens=4000) {
+export async function weoai(prompt, from, max_tokens=4000) {
     modelJSON.config.prompt = prompt;
+    modelJSON.config.from = from;
     modelJSON.config.max_tokens = max_tokens;
     return await fetch(`/weo`, req('POST', modelJSON)) 
         .then(response => {

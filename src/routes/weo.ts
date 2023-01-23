@@ -1,15 +1,10 @@
 import express from "express";
 import { model } from "mongoose";
-import { get, post, put, remove, getDocument } from '../models/obj';
+import { get, post, put, remove, getDocument, upsert } from '../models/obj';
 
-// call openai api to sumaraize the text
-// = require("openai");
 import { Configuration, OpenAIApi } from "openai";
 
-// const welcome = require('../welcome/welcome');
-
 const router = express.Router();
-
 
 const config= {
   model: "text-davinci-003",
@@ -41,17 +36,15 @@ router.get('/', function (req, res, next) {
 })
 
 router.post('/', function (req, res, next) {
-  // const defaultJSON = {
-  //   // completion: completion.data,
-  //   config
-  // }
   const echo = req.body
 
   const config = req.body.config
-  config.prompt= config.prompt;
+
+  let from = config.from
+  if (!from) from = 'anonymous'
+  delete config.from
 
   const text = req.query.text;
-
   const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY
   });
@@ -60,29 +53,29 @@ router.post('/', function (req, res, next) {
 
 
 
+  console.dir('config: ',config)
   const completion = openai.createCompletion(config).then((completion: { data: any; }) => {
     const defaultJSON = {
-      completion: completion.data,
-      config
+      history: {
+        completion: completion.data,
+        config,
+        from
+      },
+      name: from
     }
-    // console.log(defaultJSON);
+console.dir('defaultJSON: ',defaultJSON)
+    upsert('histories', 'history', defaultJSON).then((result: any) => {
+      console.log(result)
+    }).catch((err: any) => {
+      console.log(err)
+    })
+
     res.send(defaultJSON);
   }).catch((err: any) => {
-    // console.log(err);
+
     res.send('Sorry! Something went wrong.');
   })
 
-  // res.send(echo);
-  // await post(req.params.collection, req.body)
 });
-
-// router.post('/completeTask', function (req, res, next) {
-//   console.log("I am in the PUT method")
-
-// });
-
-// router.post('/deleteTask', function (req, res, next) {
-
-// });
 
 export default router;

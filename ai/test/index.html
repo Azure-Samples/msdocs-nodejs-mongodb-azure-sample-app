@@ -50,7 +50,7 @@
             document.getElementById('data').value = JSON.stringify(data);
         }
 
-            let collection = new Collection('persona', poster)
+            let collection = new Collection('histories', poster)
             // let collection = new Collection('cms', poster)
 
         window.get = () => {
@@ -99,7 +99,7 @@
         import { testAI, weoai } from '/ai/ai/weo.js';
 
         let present = (data) => {
-            data = data.completion.choices[0].text
+            data = data.history.completion.choices[0].text
             console.log(data);
             if (typeof data === 'string') 
                 document.getElementById('data').value = data;
@@ -111,7 +111,7 @@
         }
        
         window.weoai = () => {
-            weoai(document.getElementById('data').value).then(present)
+            weoai(document.getElementById('data').value, 'weolopez').then(present)
         } 
     </script>
 </html>

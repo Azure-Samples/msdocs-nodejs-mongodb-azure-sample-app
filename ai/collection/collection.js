@@ -63,13 +63,13 @@ export class Collection {
         })
     }
     async getNames() {
-        return await getNames().then(data => {
+        return await getNames(this.collection).then(data => {
             if (this.callback) this.callback(data)
             return data
         })
     }
     async getByName(name) {
-        return await getByName(name).then(data => {
+        return await getByName(this.collection, name).then(data => {
             if (this.callback) this.callback(data)
             return data
         }) .catch(err => {

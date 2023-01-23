@@ -40,13 +40,13 @@ let req = (method, body) => {
 }}
 
 //export async function to return await fetch data from the API
-export async function  getNames() {
-    return await fetch(`/crud/cms/names`, req('GET'))
+export async function  getNames(collection) {
+    return await fetch(`/crud/${collection}/names`, req('GET'))
         .then(response => response.json())
     }
 //export async function to return await fetch data from the API
-export async function getByName(name) {
-    return await fetch(`/crud/cms/names/${name}`, req('GET'))
+export async function getByName(collection, name) {
+    return await fetch(`/crud/${collection}/names/${name}`, req('GET'))
         .then(response => {
             if (response.status === 200) return response.json()
             else throw new Error(response.status)

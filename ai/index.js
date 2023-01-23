@@ -11,21 +11,30 @@ let cms = new CMS()
 let persona;
 let mediaType;
 await cms.initComponents().then(() => {
-  console.log('cms ready')
+  // console.log('cms ready')
 
   cms.page.componentObject.mediaType.setCallback( (key, value) => {
-    console.log('mediaType callback', key, value)
+    // console.log('mediaType callback', key, value)
     mediaType = JSON.parse(value)
     maxLength = Number(value)
     clipboard.value = mediaType + persona
   })
   
   cms.page.componentObject.persona.setCallback( (key, value) => {
-    console.log('persona callback', key, value)
+    // console.log('persona callback', key, value)
     value = JSON.parse(value)
     persona = value
     clipboard.value = mediaType + persona.prompt
+    // chat(persona.name)
   })
+  cms.page.componentObject.history.setCallback( (key, value) => {
+    // console.log('persona callback', key, value)
+    // value = JSON.parse(value)
+    // persona = value
+    // clipboard.value = mediaType + persona.prompt
+    chat(key)
+  })
+
 })
 
 
@@ -122,4 +131,19 @@ function saveKey() {
   // document.getElementById('not_openai_key_div').style.display = 'block';
   //reload page
   location.reload();
+}
+
+function chat(id) {
+  let chat = document.getElementById('historyOutput')
+  chat.innerHTML = ''
+  let chatCollection = new Collection('histories')
+  chatCollection.getByName(id).then( out => {
+    // console.log('out', out)
+    out.history.forEach( item => {
+      let div = document.createElement('div')
+      if (item.prompt) div.innerHTML = `<p>${item.name}:${item.prompt}</p><p>AI: ${item.summery}</p>`
+      else div.innerHTML = `<p>${item.from}:${item.config.prompt}</p><p>AI: ${item.completion.choices[0].text}</p>`
+      chat.appendChild(div)
+    })
+  })
 }
