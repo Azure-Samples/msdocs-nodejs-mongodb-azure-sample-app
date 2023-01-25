@@ -1,3 +1,7 @@
+import "./lib/db";
+import "./middleware/refundsCron";
+import "./middleware/withdrawalCron";
+import express from "express";
 var createError = require("http-errors");
 var express = require("express");
 var mongoose = require("mongoose");
@@ -8,18 +12,16 @@ const { format } = require("date-fns");
 
 // 1st party dependencies
 var configData = require("./config/connection");
-var indexRouter = require("./routes/index");
 
 async function getApp() {
-
   // Database
   var connectionInfo = await configData.getConnectionInfo();
   mongoose.connect(connectionInfo.DATABASE_URL);
 
   var app = express();
 
-  var port = normalizePort(process.env.PORT || '3000');
-  app.set('port', port);
+  var port = normalizePort(process.env.PORT || "3000");
+  app.set("port", port);
 
   // view engine setup
   app.set("views", path.join(__dirname, "views"));
@@ -33,7 +35,9 @@ async function getApp() {
 
   app.locals.format = format;
 
-  app.use("/", indexRouter);
+  app.get("/", async (req, res) => {
+    res.json({ message: "Please visit /users to view all the users" });
+  });
   app.use("/js", express.static(__dirname + "/node_modules/bootstrap/dist/js")); // redirect bootstrap JS
   app.use(
     "/css",
@@ -62,7 +66,7 @@ async function getApp() {
  * Normalize a port into a number, string, or false.
  */
 
- function normalizePort(val) {
+function normalizePort(val) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -78,5 +82,5 @@ async function getApp() {
   return false;
 }
 module.exports = {
-  getApp
+  getApp,
 };
