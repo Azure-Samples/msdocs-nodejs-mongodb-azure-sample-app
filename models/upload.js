@@ -1,4 +1,5 @@
-import { model, Schema, Document, ObjectId } from "mongoose";
+const mongoose = require("mongoose");
+const { model, Schema, Document, ObjectId } = mongoose;
 
 const UploadSchema = new Schema(
   {
@@ -49,4 +50,4 @@ const UploadSchema = new Schema(
 
 const UploadModel = model("Upload", UploadSchema);
 
-export { UploadModel };
+module.exports = { UploadModel };

@@ -1,9 +1,10 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { UploadModel } from "../models/upload";
-import { isAuth } from "../middleware/is-auth";
-import { UserModel } from "../models/user";
-import { fileUploadMiddleware } from "../middleware/multer";
+const express = require("express");
+const { Router } = express;
+const { body } = require("express-validator");
+const { UploadModel } = require("../models/upload");
+const { isAuth } = require("../middleware/is-auth");
+const { UserModel } = require("../models/user");
+const { fileUploadMiddleware } = require("../middleware/multer");
 
 const routes = Router();
 
@@ -228,4 +229,4 @@ routes.delete("/:id", isAuth, async (req, res) => {
   }
 });
 
-export default routes;
+module.exports = routes;

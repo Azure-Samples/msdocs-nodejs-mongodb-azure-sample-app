@@ -1,11 +1,12 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { PaymentModel } from "../models/payment";
-import { isAuth } from "../middleware/is-auth";
-import { UserModel } from "../models/user";
-import sendMail from "../middleware/email";
-import { UploadModel } from "../models/upload";
-import axios from "axios";
+const express = require("express");
+const { Router } = express;
+const { body } = require("express-validator");
+const { PaymentModel } = require("../models/payment");
+const { isAuth } = require("../middleware/is-auth");
+const { UserModel } = require("../models/user");
+const { sendMail } = require("../middleware/email");
+const { UploadModel } = require("../models/upload");
+const axios = require("axios");
 require("dotenv").config();
 
 const paystack = require("paystack")(process.env.PAYSTACK_SECRET_KEY);
@@ -134,4 +135,4 @@ routes.get("/", isAuth, async (req, res) => {
   }
 });
 
-export default routes;
+module.exports = routes;

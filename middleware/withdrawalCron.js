@@ -1,10 +1,7 @@
-import cron from "node-cron";
-import { WithdrawalModel } from "../models/withdrawal";
-import { UserModel } from "../models/user";
-import sendMail from "./email";
-import axios from "axios";
-
-const paystack = require("paystack")(process.env.PAYSTACK_SECRET_KEY);
+const cron = require("node-cron");
+const { WithdrawalModel } = require("../models/withdrawal");
+const { UserModel } = require("../models/user");
+const axios = require("axios");
 
 cron.schedule("0 * * * *", async (res) => {
   try {

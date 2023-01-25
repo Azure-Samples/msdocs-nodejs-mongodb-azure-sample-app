@@ -1,10 +1,11 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { RefundModel } from "../models/refund";
-import { isAuth } from "../middleware/is-auth";
-import { UserModel } from "../models/user";
-import { PaymentModel } from "../models/payment";
-import { createRefund } from "../middleware/refund";
+const express = require("express");
+const { Router } = express;
+const { body } = require("express-validator");
+const { RefundModel } = require("../models/refund");
+const { isAuth } = require("../middleware/is-auth");
+const { UserModel } = require("../models/user");
+const { PaymentModel } = require("../models/payment");
+const { createRefund } = require("../middleware/refund");
 
 const routes = Router();
 
@@ -68,4 +69,4 @@ routes.get("/", isAuth, async (req, res) => {
   }
 });
 
-export default routes;
+module.exports = routes;

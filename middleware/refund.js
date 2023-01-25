@@ -1,8 +1,8 @@
-import { IUser, UserModel } from "../models/user";
-import { IRefund, RefundModel } from "../models/refund";
-import axios from "axios";
+const { UserModel } = require("../models/user");
+const { RefundModel } = require("../models/refund");
+const axios = require("axios");
 
-export const createRefund = async (
+module.exports.createRefund = async (
   transactionId,
   amount,
   userId,

@@ -1,4 +1,5 @@
-import { model, Schema, Document, ObjectId } from "mongoose";
+const mongoose = require("mongoose");
+const { model, Schema, Document, ObjectId } = mongoose;
 
 const WritingTaskSchema = new Schema(
   {
@@ -53,4 +54,4 @@ const WritingTaskSchema = new Schema(
 
 const WritingTask = model("WritingTask", WritingTaskSchema);
 
-export { WritingTask };
+module.exports = { WritingTask };

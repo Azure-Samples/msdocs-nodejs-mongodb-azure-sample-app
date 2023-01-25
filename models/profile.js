@@ -1,4 +1,5 @@
-import { model, Schema, Document, ObjectId } from "mongoose";
+const mongoose = require("mongoose");
+const { model, Schema, Document, ObjectId } = mongoose;
 
 const ProfileSchema = new Schema(
   {
@@ -61,4 +62,4 @@ const ProfileSchema = new Schema(
 
 const ProfileModel = model("Profile", ProfileSchema);
 
-export { ProfileModel };
+module.exports = { ProfileModel };

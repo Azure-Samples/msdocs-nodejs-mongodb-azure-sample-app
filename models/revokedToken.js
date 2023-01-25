@@ -1,4 +1,5 @@
-import { model, Schema, Document, ObjectId } from "mongoose";
+const mongoose = require("mongoose");
+const { model, Schema, Document, ObjectId } = mongoose;
 
 const RevokedTokenSchema = new Schema(
   {
@@ -21,4 +22,4 @@ const RevokedTokenSchema = new Schema(
 
 const RevokedTokenModel = model("RevokedToken", RevokedTokenSchema);
 
-export { RevokedTokenModel };
+module.exports = { RevokedTokenModel };

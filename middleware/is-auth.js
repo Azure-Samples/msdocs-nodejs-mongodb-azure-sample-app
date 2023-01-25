@@ -1,10 +1,10 @@
-import jwt from "jsonwebtoken";
-import { RevokedTokenModel, IRevokedToken } from "../models/revokedToken";
+const jwt = require("jsonwebtoken");
+const { RevokedTokenModel } = require("../models/revokedToken");
 
 const secret = process.env.JWT_SECRET;
 
 // The isAuth middleware function
-export const isAuth = async (req, res, next) => {
+module.exports.isAuth = async (req, res, next) => {
   const authHeader = req.get("Authorization");
   if (!authHeader) {
     res.status(401).json({ message: "Not authenticated." });

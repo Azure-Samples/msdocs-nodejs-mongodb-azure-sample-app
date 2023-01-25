@@ -1,11 +1,12 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { UploadModel } from "../models/upload";
-import { WritingTask } from "../models/writingTask";
-import { isAuth } from "../middleware/is-auth";
-import { UserModel } from "../models/user";
-import sendMail from "../middleware/email";
-import axios from "axios";
+const express = require("express");
+const { Router } = express;
+const { body } = require("express-validator");
+const { UploadModel } = require("../models/upload");
+const { WritingTask } = require("../models/writingTask");
+const { isAuth } = require("../middleware/is-auth");
+const { UserModel } = require("../models/user");
+const { sendMail } = require("../middleware/email");
+const axios = require("axios");
 
 const routes = Router();
 
@@ -275,4 +276,4 @@ routes.post(
   }
 );
 
-export default routes;
+module.exports = routes;

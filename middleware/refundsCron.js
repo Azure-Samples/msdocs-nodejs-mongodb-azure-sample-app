@@ -1,7 +1,7 @@
-import cron from "node-cron";
-import { checkRefundStatus } from "./checkRefund";
-import { RefundModel } from "../models/refund";
-import sendMail from "./email";
+const cron = require("node-cron");
+const { checkRefundStatus } = require("./checkRefund");
+const { RefundModel } = require("../models/refund");
+const { sendMail } = require("./email");
 
 cron.schedule("0 * * * *", async () => {
   try {

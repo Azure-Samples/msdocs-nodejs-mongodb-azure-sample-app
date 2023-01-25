@@ -1,7 +1,5 @@
-import "./lib/db";
-import "./middleware/refundsCron";
-import "./middleware/withdrawalCron";
-import express from "express";
+require("./middleware/refundsCron");
+require("./middleware/withdrawalCron");
 var createError = require("http-errors");
 var express = require("express");
 var mongoose = require("mongoose");
@@ -43,6 +41,15 @@ async function getApp() {
     "/css",
     express.static(__dirname + "/node_modules/bootstrap/dist/css")
   ); // redirect CSS bootstrap
+
+  app.use("/users", clientRoutes);
+  app.use("/uploads", uploadRoutes);
+  app.use("/payments", paymentRoutes);
+  app.use("/refunds", refundRoutes);
+  app.use("/pick-upload", pickUpload);
+  app.use("/account", account);
+  app.use("/profile", profile);
+  app.use("/writing-task", writingTask);
 
   // catch 404 and forward to error handler
   app.use(function (req, res, next) {

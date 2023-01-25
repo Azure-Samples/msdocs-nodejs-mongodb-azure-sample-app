@@ -1,8 +1,9 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { isAuth } from "../middleware/is-auth";
-import { ProfileModel } from "../models/profile";
-import { UserModel } from "../models/user";
+const express = require("express");
+const { Router } = express;
+const { body } = require("express-validator");
+const { isAuth } = require("../middleware/is-auth");
+const { ProfileModel } = require("../models/profile");
+const { UserModel } = require("../models/user");
 
 const routes = Router();
 
@@ -121,4 +122,4 @@ routes.patch(
   }
 );
 
-export default routes;
+module.exports = routes;

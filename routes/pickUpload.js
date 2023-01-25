@@ -1,10 +1,9 @@
-import { UploadModel } from "../models/upload";
-import { isAuth } from "../middleware/is-auth";
-import { UserModel } from "../models/user";
-
-import sendMail from "../middleware/email";
-import { Router } from "express";
-import { body } from "express-validator";
+const { UploadModel } = require("../models/upload");
+const { isAuth } = require("../middleware/is-auth");
+const { UserModel } = require("../models/user");
+const { sendMail } = require("../middleware/email");
+const { Router } = require("express");
+const { body } = require("express-validator");
 
 const routes = Router();
 
@@ -52,4 +51,4 @@ routes.post(
   }
 );
 
-export default routes;
+module.exports = routes;

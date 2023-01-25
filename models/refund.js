@@ -1,4 +1,5 @@
-import { model, Schema, Document, ObjectId } from "mongoose";
+const mongoose = require("mongoose");
+const { model, Schema, Document, ObjectId } = mongoose;
 
 const RefundSchema = new Schema(
   {
@@ -37,4 +38,4 @@ const RefundSchema = new Schema(
 
 const RefundModel = model("Refund", RefundSchema);
 
-export { RefundModel };
+module.exports = { RefundModel };

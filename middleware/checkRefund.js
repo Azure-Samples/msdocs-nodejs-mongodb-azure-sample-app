@@ -1,6 +1,6 @@
-import axios from "axios";
+const axios = require("axios");
 
-export const checkRefundStatus = async (transactionId) => {
+module.exports.checkRefundStatus = async (transactionId) => {
   try {
     const { data } = await axios.get(`https://api.paystack.co/refund`, {
       headers: {

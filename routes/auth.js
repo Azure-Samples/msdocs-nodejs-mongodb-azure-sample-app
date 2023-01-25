@@ -1,13 +1,13 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { UserModel } from "../models/user";
-import { UploadModel } from "../models/upload";
-import { RevokedTokenModel } from "../models/revokedToken";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { isAuth } from "../middleware/is-auth";
-import crypto from "crypto";
-import sendMail from "../middleware/email";
+const { Router } = require("express");
+const { body } = require("express-validator");
+const { UserModel } = require("../models/user");
+const { UploadModel } = require("../models/upload");
+const { RevokedTokenModel } = require("../models/revokedToken");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { isAuth } = require("../middleware/is-auth");
+const crypto = require("crypto");
+const { sendMail } = require("../middleware/email");
 require("dotenv").config();
 
 const routes = Router();
@@ -245,4 +245,4 @@ routes.post("/reset-password/:token", async (req, res) => {
   }
 });
 
-export default routes;
+module.exports = routes;
