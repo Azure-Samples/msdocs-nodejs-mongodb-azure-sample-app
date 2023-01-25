@@ -7,6 +7,14 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const { format } = require("date-fns");
+const clientRoutes = require("./routes/auth");
+const uploadRoutes = require("./routes/upload");
+const paymentRoutes = require("./routes/payment");
+const refundRoutes = require("./routes/refund");
+const pickUpload = require("./routes/pickUpload");
+const account = require("./routes/withdrawal");
+const profile = require("./routes/profile");
+const writingTask = require("./routes/writingTask");
 
 // 1st party dependencies
 var configData = require("./config/connection");
