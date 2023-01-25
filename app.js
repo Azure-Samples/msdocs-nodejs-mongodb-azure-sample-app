@@ -41,7 +41,7 @@ async function getApp() {
         contact: {
           name: 'Grandeur Team',
         },
-        servers: ['http://localhost/3000'],
+        servers: ['https://grandeur-api.azurewebsites.net'],
       },
     },
     // ['.routes/*.js']
