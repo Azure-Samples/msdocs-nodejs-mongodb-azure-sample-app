@@ -29,6 +29,8 @@
     "nodemailer": "^6.9.0",
     "nodemailer-sendgrid": "^1.0.3",
     "paystack": "^2.0.1",
-    "pug": "2.0.0-beta11"
+    "pug": "2.0.0-beta11",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.0"
   }
 }
