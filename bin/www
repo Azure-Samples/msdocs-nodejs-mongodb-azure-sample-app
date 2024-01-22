@@ -32,6 +32,13 @@ getApp().then((app) => {
       throw error;
     }
 
+  // added 240121
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js'); 
+    });
+  }
+
     var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
     // handle specific listen errors with friendly messages
