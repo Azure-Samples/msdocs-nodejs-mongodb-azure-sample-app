@@ -7,14 +7,19 @@ var logger = require("morgan");
 const { format } = require("date-fns");
 
 // 1st party dependencies
-var configData = require("./config/connection");
 var indexRouter = require("./routes/index");
 
 async function getApp() {
 
   // Database
-  var connectionInfo = await configData.getConnectionInfo();
-  mongoose.connect(connectionInfo.DATABASE_URL);
+  // Use AZURE_COSMOS_CONNECTIONSTRING if available, otherwise fall back to MONGODB_URI
+  const mongoUri = process.env.AZURE_COSMOS_CONNECTIONSTRING || process.env.MONGODB_URI;
+
+  mongoose.connect(mongoUri).then(() => {
+    console.log('Connected to database');
+  }).catch((err) => {
+    console.error('Error connecting to database:', err);
+  });
 
   var app = express();
 
