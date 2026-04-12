@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/bc8465fd-0da7-430a-8710-428d38d0ec99/resourceGroups/RG-DT4-devops-dt4-15/providers/Microsoft.Web/sites/Node-Mongo-App",
+    "appService.deploySubpath": "."
+}

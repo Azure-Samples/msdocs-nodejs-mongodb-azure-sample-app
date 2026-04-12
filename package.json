@@ -10,6 +10,7 @@
     "cookie-parser": "~1.4.6",
     "date-fns": "^4.1.0",
     "debug": "~4.3.7",
+    "dotenv": "^17.4.1",
     "express": "^4.21.0",
     "http-errors": "~2.0.0",
     "mongoose": "^8.6.3",

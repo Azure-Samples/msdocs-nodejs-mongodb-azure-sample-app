@@ -2,43 +2,94 @@ extends layout
 
 block content
 
-  form(action='./addTask' method='POST' class='form-registration')
+  //  Inline Styles (No external CSS needed)
+  style.
+    .task-row {
+      transition: all 0.3s ease;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .task-row:hover {
+      transform: scale(1.02);
+      background-color: #f8f9fa;
+    }
+
+    button {
+      transition: all 0.2s ease-in-out;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .fade-in {
+      animation: fadeInUp 0.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+  //  Add Task Form (Animated)
+  form(action='./addTask' method='POST' class='form-registration fade-in')
     div(class='row my-3')
-        div(class='col-md-2 align-bottom')
-          label(for="taskName" class='fs-5') New task
-        div(class='col-md-8')
-          input(class="form-control form-control-sm" type="text" name='taskName', placeholder="Enter new task here" )
-        div(class='col-md-2 text-end')
-          button(class='btn btn-success btn-sm' type='submit') Add task
+      div(class='col-md-2')
+        label(for="taskName" class='fs-5') New task
+      div(class='col-md-8')
+        input.form-control.form-control-sm(type="text" name='taskName' placeholder="Enter new task here")
+      div(class='col-md-2 text-end')
+        button.btn.btn-success.btn-sm(type='submit') Add task
 
+  h5.my-2 Current tasks
 
-  h5(class='my-2') Current tasks
+  div.row.mb-3.border-bottom.border-3
+    div.col-md-6.fw-bold Task
+    div.col-md-2.fw-bold Created
+    div.col-md-4.fw-bold Action
 
-  div(class='row mb-3 border-bottom border-3')
-    div(class='col-md-6 fw-bold') Task
-    div(class='col-md-2 fw-bold') Created
-    div(class='col-md-4 fw-bold') Action
-
+  //  Current Tasks (Animated Rows)
   each task in currentTasks
-    div(class='row mb-2')
-      div(class='col-sm-6') #{task.taskName}
-      div(class='col-sm-2') #{format(task.createDate, "yyyy-MM-dd")}
-      div(class='col-sm-2')
-        form(action='./completeTask' method='POST' class='form-registration')
+    div.row.mb-2.task-row.fade-in
+      div.col-sm-6 #{task.taskName}
+      div.col-sm-2 #{format(task.createDate, "yyyy-MM-dd")}
+      div.col-sm-2
+        form(action='./completeTask' method='POST')
           input(type='hidden' name='_id' value=`${task._id}`)
-          button(class='btn btn-primary btn-sm mx-1' type='submit') Complete
-      div(class='col-sm-2')
-        form(action='./deleteTask' method='POST' class='form-registration')
+          button.btn.btn-primary.btn-sm.mx-1(type='submit') Complete
+      div.col-sm-2
+        form.delete-form(action='./deleteTask' method='POST')
           input(type='hidden' name='_id' value=`${task._id}`)
-          button(class='btn btn-danger btn-sm mx-1') Delete
+          button.btn.btn-danger.btn-sm.mx-1(type='submit') Delete
 
-  h5(class='my-2') Completed tasks
-  div(class='row mb-3 border-bottom border-3')
-    div(class='col-sm-8 fw-bold') Task
-    div(class='col-sm-2 fw-bold') Created
-    div(class='col-sm-2 fw-bold') Completed
+  h5.my-2 Completed tasks
+
+  div.row.mb-3.border-bottom.border-3
+    div.col-sm-8.fw-bold Task
+    div.col-sm-2.fw-bold Created
+    div.col-sm-2.fw-bold Completed
+
+  //  Completed Tasks (Animated)
   each task in completedTasks
-    div(class='row mb-3')
-      div(class='col-sm-8') #{task.taskName}
-      div(class='col-sm-2') #{format(task.createDate, "yyyy-MM-dd")}
-      div(class='col-sm-2') #{format(task.completedDate, "yyyy-MM-dd")}
+    div.row.mb-3.task-row.fade-in
+      div.col-sm-8 #{task.taskName}
+      div.col-sm-2 #{format(task.createDate, "yyyy-MM-dd")}
+      div.col-sm-2 #{format(task.completedDate, "yyyy-MM-dd")}
+
+  //  Inline JS (No external file)
+  script.
+    document.querySelectorAll(".delete-form").forEach(form => {
+      form.addEventListener("submit", function(e) {
+        const row = this.closest(".task-row");
+        row.style.transition = "0.3s";
+        row.style.opacity = "0";
+      });
+    });

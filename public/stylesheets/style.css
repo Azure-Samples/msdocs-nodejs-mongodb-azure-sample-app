@@ -1,16 +1,62 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
+ body {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #333;
+  }
 
-a {
-  color: #00B7FF;
-}
+  .container, .content {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
 
-.text-azure-blue {
-  color: #0078D4
-}
+  .task-row {
+    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 10px;
+  }
 
-.bg-azure-light-gray {
-  background-color: #EBEBEB;
-}
+  .task-row:hover {
+    transform: scale(1.03);
+    background: linear-gradient(90deg, #fdfbfb, #ebedee);
+  }
+
+  /* 🔥 Buttons */
+  .btn-success {
+    background: linear-gradient(45deg, #00c853, #64dd17);
+    border: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(45deg, #2196f3, #21cbf3);
+    border: none;
+  }
+
+  .btn-danger {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    border: none;
+  }
+
+  button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  }
+
+  input {
+    border-radius: 8px !important;
+  }
+
+  .fade-in {
+    animation: fadeInUp 0.5s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
