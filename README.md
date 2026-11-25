@@ -7,19 +7,26 @@ languages:
 products:
 - azure
 - azure-app-service
-- azure-cosmos-db
 - azure-virtual-network
 - azure-key-vault
 - azure-cache-redis
 urlFragment: msdocs-nodejs-mongodb-azure-sample-app
 name: Deploy a Express.js web app with MongoDB in Azure
-description: This is a CRUD web app that uses Express.js and Azure Cosmos DB.
+description: This is a CRUD web app that uses Express.js and Azure DocumentDB.
 ---
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
 
 # Deploy a Express.js web app with MongoDB in Azure
 
-This is a CRUD (create-read-update-delete) web app that uses Express.js and Azure Cosmos DB. The Node.js app is hosted in a fully managed Azure App Service. This app is designed to be be run locally Linux Node.js container in Azure App Service. You can either deploy this project by following the tutorial [*Tutorial: Deploy a Node.js + MongoDB web app to Azure*](https://learn.microsoft.com/azure/app-service/tutorial-nodejs-mongodb-app) or by using the [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview) according to the instructions below.
+This is a CRUD (create-read-update-delete) web app that uses Express.js and Azure DocumentDB. The Node.js app is hosted in a fully managed Azure App Service. This app is designed to be be run locally Linux Node.js container in Azure App Service. You can either deploy this project by following the tutorial [*Tutorial: Deploy a Node.js + MongoDB web app to Azure*](https://learn.microsoft.com/azure/app-service/tutorial-nodejs-mongodb-app) or by using the [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview) according to the instructions below.
+
+The default azd deployment creates a private Azure DocumentDB managed cluster, not a
+Cosmos DB RU-based MongoDB account. Existing application deployments can still use
+`AZURE_COSMOS_CONNECTIONSTRING`; local development uses `MONGODB_URI`.
+
+**New environments only:** this template does not migrate data. Do not deploy it over
+an existing RU-based environment. Read the [infrastructure, credential, cost, rotation,
+and cleanup guidance](infra/README.md) before provisioning.
 
 ## Run the sample
 
@@ -53,13 +60,16 @@ Steps for deployment:
     azd auth login
     ```
 
-4. Provision and deploy all the resources:
+4. Provision and deploy all the resources into a **new, uniquely named environment**:
 
     ```shell
     azd up
     ```
 
-    It will prompt you to create a deployment environment name, pick a subscription, and provide a location (like `westeurope`). Then it will provision the resources in your account and deploy the latest code. If you get an error with deployment, changing the location (like to "centralus") can help, as there may be availability constraints for some of the resources.
+    It will also securely prompt for `documentDbAdministratorPassword` (no default).
+    Do not save the password in `.env`, command arguments, or source control.
+
+    It will prompt you to create a deployment environment name, pick a subscription, and provide a location (like `westeurope`). Then it will provision the resources in your account and deploy the latest code. Verify the selected region supports all resources and the chosen DocumentDB configuration before provisioning. Do not retry a different location over an existing environment; review any partially created resources first.
 
 5. When `azd` has finished deploying, you'll see an endpoint URI in the command output. Visit that URI, and you should see the CRUD app! 🎉 If you see an error, open the Azure Portal from the URL in the command output, navigate to the App Service, select Logstream, and check the logs for any errors.
 
@@ -68,6 +78,21 @@ Steps for deployment:
     ```shell
     azd deploy
     ```
+
+## Local validation
+
+```shell
+node --test tests/database.test.js tests/routes.test.js
+# Requires Bicep on PATH (or set BICEP_BIN to its executable path):
+node --test tests/infrastructure.test.js
+```
+
+Database connection and all four CRUD failure handlers log fixed messages, not driver
+error objects that could contain credentials. Normal task/request logging is unchanged.
+Tests execute the real routes with stubbed models, not a live database.
+
+These are offline checks, not deployment or database connectivity tests. See
+[cloud acceptance and cleanup](infra/README.md#local-checks-and-cloud-acceptance).
 
 ## Getting help
 

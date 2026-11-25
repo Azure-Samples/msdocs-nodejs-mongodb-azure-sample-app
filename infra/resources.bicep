@@ -2,6 +2,14 @@ param name string
 param location string
 param resourceToken string
 
+@description('Native DocumentDB administrator username. Managed identity is used for Key Vault, not database authentication.')
+param documentDbAdministratorLogin string
+
+@secure()
+@minLength(8)
+@maxLength(128)
+param documentDbAdministratorPassword string
+
 var appName = '${name}-${resourceToken}'
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-01-01' = {
@@ -110,7 +118,7 @@ resource vaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = 
   }
 }
 
-// Resources needed to secure Cosmos DB behind a private endpoint
+// Resources needed to secure Azure DocumentDB behind a private endpoint
 resource dbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = {
   name: '${appName}-db-privateEndpoint'
   location: location
@@ -122,8 +130,8 @@ resource dbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = {
       {
         name: '${appName}-db-privateEndpoint'
         properties: {
-          privateLinkServiceId: dbaccount.id
-          groupIds: ['MongoDB']
+          privateLinkServiceId: documentDb.id
+          groupIds: ['MongoCluster']
         }
       }
     ]
@@ -143,7 +151,7 @@ resource dbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-04-01' = {
   }
 }
 resource privateDnsZoneDB 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.mongo.cosmos.azure.com'
+  name: 'privatelink.mongocluster.cosmos.azure.com'
   location: 'global'
   dependsOn: [
     virtualNetwork
@@ -228,66 +236,53 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 }
 
-// The Cosmos DB account is configured to be the minimum pricing tier
-resource dbaccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
+// A paid, single-shard Azure DocumentDB cluster. Review regional availability and cost.
+// This creates a NEW database backend; it does not migrate an existing RU account.
+resource documentDb 'Microsoft.DocumentDB/mongoClusters@2024-07-01' = {
+  name: 'docdb-${resourceToken}'
   location: location
-  name: '${appName}-server'
-  kind: 'MongoDB'
-  tags:{
-    defaultExperience: 'Azure Cosmos DB for MongoDB API'
-  }
   properties: {
+    administrator: {
+      userName: documentDbAdministratorLogin
+      password: documentDbAdministratorPassword
+    }
+    createMode: 'Default'
+    serverVersion: '8.0'
+    compute: {
+      tier: 'M30'
+    }
+    storage: {
+      sizeGb: 128
+    }
+    sharding: {
+      shardCount: 1
+    }
+    highAvailability: {
+      targetMode: 'Disabled'
+    }
     publicNetworkAccess: 'Disabled'
-    enableAutomaticFailover: false
-    enableMultipleWriteLocations: false
-    isVirtualNetworkFilterEnabled: false
-    disableKeyBasedMetadataWriteAccess: false
-    enableFreeTier: false
-    analyticalStorageConfiguration: {
-      schemaType: 'FullFidelity'
-    }
-    databaseAccountOfferType: 'Standard'
-    defaultIdentity: 'FirstPartyIdentity'
-    networkAclBypass: 'None'
-    disableLocalAuth: false
-    enablePartitionMerge: false
-    enableBurstCapacity: false
-    minimalTlsVersion: 'Tls12'
-    consistencyPolicy: {
-      defaultConsistencyLevel: 'Session'
-      maxIntervalInSeconds: 5
-      maxStalenessPrefix: 100
-    }
-    apiProperties: {
-      serverVersion: '4.0'
-    }
-    locations: [
-      {
-        locationName: location
-        failoverPriority: 0
-        isZoneRedundant: false
-      }
-    ]
-    capabilities: [
-      {
-        name: 'EnableMongo'
-      }
-      {
-        name: 'DisableRateLimitingResponses'
-      }
-      {
-        name: 'EnableServerless'
-      }
-    ]
   }
+}
 
-  resource db 'mongodbDatabases@2024-05-15' = {
-    name: '${appName}-database'
-    properties: {
-      resource: {
-        id: '${appName}-database'
-      }
-    }
+// The resource returns the SRV connection string with <user>/<password> placeholders.
+// Preserve its service-provided host/options; URI-encode each credential separately.
+// Never output this value or put it in azd environment variables.
+resource documentDbConnectionString 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
+  parent: keyVault
+  name: 'documentdb-connection-string'
+  properties: {
+    value: replace(replace(documentDb.properties.connectionString, '<user>', uriComponent(documentDbAdministratorLogin)), '<password>', uriComponent(documentDbAdministratorPassword))
+  }
+}
+
+// Only the app's managed identity receives permission to read runtime secrets.
+resource webKeyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, web.id, 'Key Vault Secrets User')
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+    principalId: web.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -329,17 +324,14 @@ resource web 'Microsoft.Web/sites@2022-09-01' = {
   name: appName
   location: location
   tags: {'azd-service-name': 'web'} // Needed by AZD
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     siteConfig: {
       linuxFxVersion: 'NODE|24-lts' // Set to Node 24 LTS
       vnetRouteAllEnabled: true // Route outbound traffic to the VNET
       ftpsState: 'Disabled'
-      appSettings: [
-        {
-          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT' // By default, azd up doesn't include node_modules for node. Enable deployment build automation on App Service
-          value: 'true'
-        }
-      ]
     }
     serverFarmId: appServicePlan.id
     httpsOnly: true
@@ -395,52 +387,27 @@ resource web 'Microsoft.Web/sites@2022-09-01' = {
   dependsOn: [virtualNetwork]
 }
 
-// Service Connector from the app to the key vault, which generates the connection settings for the Node.js application
-// The application code doesn't make any direct connections to the key vault, but the setup expedites the managed identity access
-// so that the database and cache connectors can be configured with key vault references.
-resource vaultConnector 'Microsoft.ServiceLinker/linkers@2024-04-01' = {
-  scope: web
-  name: 'vaultConnector'
-  properties: {
-    clientType: 'nodejs'
-    targetService: {
-      type: 'AzureResource'
-      id: keyVault.id
-    }
-    authInfo: {
-      authType: 'systemAssignedIdentity' // Use a system-assigned managed identity. No password is used.
-    }
-    vNetSolution: {
-      type: 'privateLink'
+// Read in the caller, after the site exists; the nested writer must not read
+// its own config resource. Preserve Redis/user keys even if the linker is a no-op.
+// Expected ARM-safe boundary; first-create/repeat deployment need live validation.
+module webAppSettings 'appsettings.bicep' = {
+  name: 'appsettings'
+  params: {
+    webAppName: web.name
+    existingSettings: list('${web.id}/config/appsettings', '2022-09-01').properties
+    newSettings: {
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+      AZURE_DOCUMENTDB_CONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${documentDbConnectionString.name})'
+      AZURE_DOCUMENTDB_DATABASE: 'todolist'
     }
   }
   dependsOn: [
-    vaultPrivateEndpoint
-  ]
-}
-
-// Service Connector from the app to the database, which generates the connection settings for the Node.js application
-resource dbConnector 'Microsoft.ServiceLinker/linkers@2024-04-01' = {
-  scope: web
-  name: 'defaultConnector'
-  properties: {
-    clientType: 'nodejs'
-    targetService: {
-      type: 'AzureResource'
-      id: dbaccount::db.id
-    }
-    authInfo: {
-      authType: 'accessKey' // Configure secrets as Key Vault references. No secret is exposed in App Service.
-    }
-    secretStore: {
-      keyVaultId: keyVault.id
-    }
-    vNetSolution: {
-      type: 'privateLink'
-    }
-  }
-  dependsOn: [
-    dbPrivateEndpoint
+    webKeyVaultSecretsUser
+    web::webappVnetConfig
+    dbPrivateEndpoint::privateDnsZoneGroup
+    privateDnsZoneDB::privateDnsZoneLinkDB
+    vaultPrivateEndpoint::privateDnsZoneGroup
+    privateDnsZoneKeyVault::vnetLink
   ]
 }
 
@@ -466,6 +433,9 @@ resource cacheConnector 'Microsoft.ServiceLinker/linkers@2024-04-01' = {
   }
   dependsOn: [
     cachePrivateEndpoint
+    vaultPrivateEndpoint
+    webKeyVaultSecretsUser
+    webAppSettings
   ]
 }
 
@@ -526,7 +496,11 @@ resource webdiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
 
 output WEB_URI string = 'https://${web.properties.defaultHostName}'
 
-output CONNECTION_SETTINGS array = map(concat(dbConnector.listConfigurations().configurations, cacheConnector.listConfigurations().configurations, vaultConnector.listConfigurations().configurations), config => config.name)
+// Names only: do not call secret-returning functions in deployment outputs.
+output CONNECTION_SETTINGS array = [
+  'AZURE_DOCUMENTDB_CONNECTIONSTRING'
+  'AZURE_DOCUMENTDB_DATABASE'
+]
 output WEB_APP_LOG_STREAM string = format('https://portal.azure.com/#@/resource{0}/logStream', web.id)
 output WEB_APP_SSH string = format('https://{0}.scm.azurewebsites.net/webssh/host', web.name)
 output WEB_APP_CONFIG string = format('https://portal.azure.com/#@/resource{0}/environmentVariablesAppSettings', web.id)

@@ -9,6 +9,16 @@ param name string
 @description('Primary location for all resources')
 param location string
 
+@minLength(1)
+@description('Native DocumentDB administrator username. Use the secure prompt for the password.')
+param documentDbAdministratorLogin string = 'documentdbadmin'
+
+@secure()
+@minLength(8)
+@maxLength(128)
+@description('DocumentDB administrator password. Supply at the secure azd prompt; do not put it in .env or source control.')
+param documentDbAdministratorPassword string
+
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -24,6 +34,8 @@ module resources 'resources.bicep' = {
     name: name
     location: location
     resourceToken: resourceToken
+    documentDbAdministratorLogin: documentDbAdministratorLogin
+    documentDbAdministratorPassword: documentDbAdministratorPassword
   }
 }
 
