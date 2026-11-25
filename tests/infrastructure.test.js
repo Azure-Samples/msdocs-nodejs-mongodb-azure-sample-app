@@ -27,17 +27,47 @@ function settingsResource(t) {
   return settingsModule(t).properties.template.resources.find(r => r.type === 'Microsoft.Web/sites/config');
 }
 function ownedSettings(t) { return settingsModule(t).properties.parameters.newSettings.value; }
-const mergeExpression = "[union(list(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties, parameters('newSettings'))]";
+const mergeExpression = "[union(parameters('existingSettings'), parameters('newSettings'))]";
+const readExpression = "[list(format('{0}/config/appsettings', resourceId('Microsoft.Web/sites', variables('appName'))), '2022-09-01').properties]";
+// Exact emitted resource properties from the deployment rejected by ARM. No live
+// names, values, subscription IDs or deployment artifacts belong in this fixture.
+const rejectedRuntimeExpression = "[union(list(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties, parameters('newSettings'))]";
+
+// Fail closed for this small writer: no runtime resource reads anywhere in its
+// properties, including indirection through variables. This is deliberately not
+// a general ARM validator; actual service validation remains a cloud gate.
+function assertReadFreeWriter(scope) {
+  function visit(value, seen = new Set()) {
+    if (typeof value === 'string') {
+      assert.doesNotMatch(value, /\b(?:list\w*|reference)\s*\(/i, 'writer must not read resources');
+      for (const match of value.matchAll(/variables\('([^']+)'\)/g)) {
+        assert.ok(!seen.has(match[1]), 'variable cycle');
+        assert.ok(Object.hasOwn(scope.variables || {}, match[1]), 'unknown variable');
+        visit(scope.variables[match[1]], new Set([...seen, match[1]]));
+      }
+    } else if (value && typeof value === 'object') {
+      for (const item of Object.values(value)) visit(item, seen);
+    }
+  }
+  for (const resource of scope.resources) visit(resource.properties);
+  visit(scope.variables || {});
+  visit(scope.parameters || {});
+}
 function settingsContract(t) {
   const stage = settingsModule(t);
   assert.ok(stage, 'ordered settings deployment');
   assert.equal(stage.properties.expressionEvaluationOptions.scope, 'inner');
   assert.equal(stage.properties.mode, 'Incremental');
-  assert.equal(stage.properties.template.parameters.newSettings.type, 'secureObject');
+  for (const key of ['existingSettings', 'newSettings']) {
+    assert.equal(stage.properties.template.parameters[key].type, 'secureObject');
+    assert.ok(!('defaultValue' in stage.properties.template.parameters[key]));
+  }
+  assertReadFreeWriter(stage.properties.template);
   assert.equal(stage.properties.parameters.webAppName.value, "[variables('appName')]");
-  assert.ok(stage.dependsOn.includes("[resourceId('Microsoft.Web/sites', variables('appName'))]"), 'site must exist before nested read');
-  assert.ok(!JSON.stringify(stage.properties.parameters).includes('list('), 'no early or secret-valued read passed across modules');
-  assert.deepEqual(Object.keys(stage.properties.parameters).sort(), ['newSettings', 'webAppName']);
+  assert.ok(stage.dependsOn.includes("[resourceId('Microsoft.Web/sites', variables('appName'))]"), 'site must exist before caller evaluates read parameter');
+  assert.equal(stage.properties.parameters.existingSettings.value, readExpression);
+  assert.deepEqual(Object.keys(stage.properties.parameters).sort(), ['existingSettings', 'newSettings', 'webAppName']);
+  assert.ok(!stage.properties.debugSetting, 'no deployment request/response logging');
   assert.deepEqual(stage.properties.template.outputs || {}, {}, 'never output current settings');
   const config = settingsResource(t);
   assert.equal(config.name, "[format('{0}/appsettings', parameters('webAppName'))]");
@@ -48,13 +78,19 @@ function settingsContract(t) {
   assert.ok(!moduleTemplate(t).resources.some(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')), 'no competing full PUT');
   assert.equal(allResources(t).filter(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')).length, 1);
   for (const scope of [t, moduleTemplate(t), stage.properties.template]) {
-    assert.doesNotMatch(JSON.stringify(scope.outputs || {}), /list\(|newSettings|currentSettings/i);
+    assert.doesNotMatch(JSON.stringify(scope.outputs || {}), /list\(|newSettings|existingSettings|currentSettings/i);
+    assert.doesNotMatch(JSON.stringify(scope.metadata || {}), /list\(|parameters\(/i);
+    for (const resource of scope.resources) assert.ok(!resource.properties?.debugSetting);
   }
 }
 function contract(t) {
   const m = moduleTemplate(t);
   const text = JSON.stringify(t);
   assert.doesNotMatch(text, /databaseAccounts|mongodbDatabases|listKeys|EnableServerless|privatelink\.mongo\.cosmos/i);
+  for (const resource of allResources(t)) {
+    assert.ok(!resource.properties?.debugSetting, 'no request/response debug logging');
+    assert.doesNotMatch(JSON.stringify(resource.metadata || {}), /list\(|parameters\(/i);
+  }
   for (const scope of [t, m]) {
     assert.equal(scope.parameters.documentDbAdministratorPassword.type, 'securestring');
     assert.ok(!('defaultValue' in scope.parameters.documentDbAdministratorPassword));
@@ -133,11 +169,19 @@ const mutations = {
   'secret appsetting': t => { ownedSettings(t).AZURE_DOCUMENTDB_CONNECTIONSTRING = "[parameters('documentDbAdministratorPassword')]"; },
   'public database': t => { one(t, 'Microsoft.DocumentDB/mongoClusters').properties.publicNetworkAccess = 'Enabled'; },
   'destructive settings PUT': t => { settingsResource(t).properties = "[parameters('newSettings')]"; },
-  'old settings overriding owned keys': t => { settingsResource(t).properties = "[union(parameters('newSettings'), list(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties)]"; },
+  'old settings overriding owned keys': t => { settingsResource(t).properties = "[union(parameters('newSettings'), parameters('existingSettings'))]"; },
   'early settings read without site dependency': t => { settingsModule(t).dependsOn = settingsModule(t).dependsOn.filter(x => x !== "[resourceId('Microsoft.Web/sites', variables('appName'))]"); },
   'outer-scope settings evaluation': t => { settingsModule(t).properties.expressionEvaluationOptions.scope = 'outer'; },
   'settings leaked as module output': t => { settingsModule(t).properties.template.outputs = { settings: { type: 'object', value: settingsResource(t).properties } }; },
   'plaintext settings parameter': t => { settingsModule(t).properties.template.parameters.newSettings.type = 'object'; },
+  'plaintext existing-settings parameter': t => { settingsModule(t).properties.template.parameters.existingSettings.type = 'object'; },
+  'lost existing-settings read': t => { settingsModule(t).properties.parameters.existingSettings.value = {}; },
+  'runtime-rejected self-read expression': t => { settingsResource(t).properties = rejectedRuntimeExpression; },
+  'self-reference inside writer': t => { settingsResource(t).properties = "[union(reference(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties, parameters('newSettings'))]"; },
+  'self-read hidden behind variable': t => { settingsModule(t).properties.template.variables = { hidden: rejectedRuntimeExpression }; settingsResource(t).properties = "[variables('hidden')]"; },
+  'settings request debug logging': t => { settingsModule(t).properties.debugSetting = { detailLevel: 'requestContent,responseContent' }; },
+  'settings leaked in template metadata': t => { settingsModule(t).properties.template.metadata.leaked = "[parameters('existingSettings')]"; },
+  'default existing-settings dictionary': t => { settingsModule(t).properties.template.parameters.existingSettings.defaultValue = {}; },
   'self-dependent settings resource': t => { settingsResource(t).dependsOn = ["[resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings')]"]; }
 
 };
@@ -152,7 +196,7 @@ test('compiled secret expression encodes credentials independently and preserves
   const user = 'dummy@user:/?#%$[] ü';
   const password = 'Dummy@:/?#%$[] 密码';
   const serviceUri = 'mongodb+srv://<user>:<password>@cluster.global.invalid/?tls=true&authSource=admin&retryWrites=false';
-  const tokens = expression.slice(1, -1).match(/'(?:''|[^'])*'|[A-Za-z][A-Za-z0-9]*|[().,]/g);
+  const tokens = expression.slice(1, -1).match(/'(?:''|[^'])*'|[A-Za-z][A-Za-z0-9]*|[0-9]+|[().,]/g);
   let i = 0;
   function value() {
     let token = tokens[i++];
@@ -184,34 +228,94 @@ test('compiled secret expression encodes credentials independently and preserves
   assert.ok(!hydrated.includes('<user>') && !hydrated.includes('<password>'));
 });
 
-// Evaluate the actual emitted expression, with list() stubbed to a synthetic
-// service response. This verifies local merge semantics, not ARM/provider runtime.
-function applySettings(existing) {
-  settingsContract(template);
-  const expression = settingsResource(template).properties;
-  const tokens = expression.slice(1, -1).match(/'(?:''|[^'])*'|[A-Za-z][A-Za-z0-9]*|[().,]/g);
+// Evaluate both actual compiled expressions across the caller/writer boundary.
+// This models local expression semantics, not ARM's deployment engine.
+function evaluate(expression, functions) {
+  const tokens = expression.slice(1, -1).match(/'(?:''|[^'])*'|[A-Za-z][A-Za-z0-9]*|[0-9]+|[().,]/g);
   let i = 0;
-  let reads = 0;
-  const functions = {
-    parameters: key => ({ webAppName: 'synthetic-app', newSettings: ownedSettings(template) })[key],
-    resourceId: (...args) => { assert.deepEqual(args, ['Microsoft.Web/sites/config', 'synthetic-app', 'appsettings']); return 'synthetic-appsettings-id'; },
-    list: (id, version) => { assert.equal(id, 'synthetic-appsettings-id'); assert.equal(version, '2022-09-01'); reads++; return { properties: existing }; },
-    union: (...objects) => Object.assign({}, ...objects)
-  };
   function value() {
     const token = tokens[i++];
+    if (/^[0-9]+$/.test(token)) return Number(token);
     if (token.startsWith("'")) return token.slice(1, -1).replaceAll("''", "'");
     assert.equal(tokens[i++], '(');
     const args = [];
     if (tokens[i] !== ')') do { args.push(value()); } while (tokens[i] === ',' && ++i);
     assert.equal(tokens[i++], ')');
-    assert.ok(token in functions);
+    assert.ok(token in functions, `unhandled expression function ${token}`);
     let result = functions[token](...args);
     if (tokens[i] === '.') { i++; result = result[tokens[i++]]; }
     return result;
   }
-  const result = value(); assert.equal(i, tokens.length); assert.equal(reads, 1); return result;
+  const result = value(); assert.equal(i, tokens.length); return result;
 }
+function applySettings(existing) {
+  settingsContract(template);
+  let reads = 0;
+  const current = evaluate(settingsModule(template).properties.parameters.existingSettings.value, {
+    variables: key => { assert.equal(key, 'appName'); return 'synthetic-app'; },
+    format: (text, arg) => text.replace('{0}', arg),
+    resourceId: (...args) => { assert.deepEqual(args, ['Microsoft.Web/sites', 'synthetic-app']); return 'synthetic-site-id'; },
+    list: (id, version) => { assert.equal(id, 'synthetic-site-id/config/appsettings'); assert.equal(version, '2022-09-01'); reads++; return { properties: existing }; }
+  });
+  const result = evaluate(settingsResource(template).properties, {
+    parameters: key => ({ existingSettings: current, newSettings: ownedSettings(template) })[key],
+    union: (...objects) => Object.assign({}, ...objects)
+    // Deliberately no list/reference implementation in the writer.
+  });
+  assert.equal(reads, 1); return result;
+}
+test('read-free writer oracle rejects runtime fixture and variable indirection', () => {
+  const scope = settingsModule(template).properties.template;
+  assertReadFreeWriter(scope);
+  for (const expression of [rejectedRuntimeExpression,
+    "[reference(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01')]",
+    "[variables('hidden')]"]) {
+    const broken = structuredClone(scope);
+    broken.variables = { hidden: "[variables('nested')]", nested: rejectedRuntimeExpression };
+    broken.resources[0].properties = expression;
+    assert.throws(() => assertReadFreeWriter(broken), /writer must not read resources/);
+  }
+});
+
+// Resolve the emitted dependency IDs to concrete synthetic IDs, then traverse
+// every scope. Explicit edges alone missed the old implicit self-read, which is
+// why this graph check is paired with the read-free writer oracle above.
+function dependencyGraph(t) {
+  const vars = Object.fromEntries(Object.keys(t.variables || {}).map(k => [k, `synthetic-${k}`]));
+  const f = {
+    variables: k => vars[k], parameters: k => `synthetic-${k}`,
+    format: (text, ...args) => text.replace(/\{(\d+)\}/g, (_, i) => args[i]),
+    resourceId: (type, ...names) => `${type}/${names.join('/')}`,
+    extensionResourceId: (scope, type, ...names) => `${scope}/${type}/${names.join('/')}`,
+    subscriptionResourceId: (type, ...names) => `${type}/${names.join('/')}`,
+    guid: (...args) => args.join('|'), replace: (s, a, b) => s.replaceAll(a, b),
+    take: (s, n) => s.slice(0, n)
+  };
+  // Graph names use take(..., 17); the small evaluator needs integer tokens too.
+  const resolve = value => value.startsWith('[') ? evaluate(value, f) : value;
+  const ids = new Map(t.resources.map(r => [r, `${r.scope ? `${resolve(r.scope)}/` : ''}${r.type}/${resolve(r.name)}`]));
+  const byId = new Map([...ids].map(([r, id]) => [id, r]));
+  const visited = new Set(); const active = new Set();
+  function visit(r) {
+    assert.ok(!active.has(r), 'dependency cycle');
+    if (visited.has(r)) return;
+    active.add(r);
+    for (const edge of r.dependsOn || []) {
+      const target = byId.get(resolve(edge));
+      assert.ok(target, `unresolved dependency: ${edge}`);
+      visit(target);
+    }
+    active.delete(r); visited.add(r);
+  }
+  for (const r of t.resources) visit(r);
+  for (const r of t.resources) if (r.properties?.template) dependencyGraph(r.properties.template);
+}
+test('compiled deployment dependency graph is acyclic across scopes', () => dependencyGraph(template));
+test('dependency graph rejects a settings-to-site back edge', () => {
+  const broken = structuredClone(template);
+  one(broken, 'Microsoft.Web/sites').dependsOn.push("[resourceId('Microsoft.Resources/deployments', 'appsettings')]");
+  assert.throws(() => dependencyGraph(broken), /dependency cycle/);
+});
 test('new site empty dictionary receives the owned settings', () => {
   assert.deepEqual(applySettings({}), ownedSettings(template));
 });

@@ -52,18 +52,21 @@ Managed Redis, private endpoints, and logging also incur charges.
   design and provision an appropriately scoped application user separately.
 - The deployment principal needs resource deployment and role-assignment permissions.
   The existing Managed Redis Service Connector remains for Redis only. No DocumentDB
-  Service Connector support is assumed. An ordered `appsettings.bicep` module starts
-  only after the site and RBAC/network setup exist. Inside it, the existing settings
-  dictionary is read and merged before the full settings PUT; the three template-owned
-  DocumentDB/build keys override previous values, while Redis and user keys survive.
+  Service Connector support is assumed. The caller reads the existing settings after
+  the site and RBAC/network setup exist, passing them into `appsettings.bicep` through
+  a `secureObject` parameter. The nested writer only merges its two secure dictionaries
+  before the full settings PUT; the three template-owned DocumentDB/build keys override
+  previous values, while Redis and user keys survive. Reading the same config inside
+  its own PUT causes an ARM circular dependency, even with a string `resourceId`.
   The Redis connector remains ordered afterwards, but preservation does not depend on
-  an unchanged connector reapplying settings. No existing settings are output or passed
-  through module parameters; the read can contain plaintext secrets, so do not enable
-  request/response debug logging or dump settings during deployment troubleshooting.
+  an unchanged connector reapplying settings. Existing settings can contain plaintext
+  secrets; neither dictionary is output. Do not enable request/response debug logging
+  or dump module parameters/settings during deployment troubleshooting.
   The deployment principal also needs permission to list application settings.
   This read/merge is not an atomic lock: serialize deployments and external settings
   edits to avoid concurrent-writer races. First deployment and repeat provisioning
-  still need Azure acceptance. The hook lists database setting names only.
+  still need Azure acceptance: this boundary is expected to be ARM-safe, not proof of
+  a successful deployment. The hook lists database setting names only.
   See the [appsettings list API](https://learn.microsoft.com/rest/api/appservice/web-apps/list-application-settings?view=rest-appservice-2022-09-01)
   and the [official AVM retain-current-settings pattern](https://github.com/Azure/bicep-registry-modules/blob/abbc773d571ad6cc75591125ad74c8372c483550/avm/res/web/site/main.bicep).
 
@@ -102,7 +105,10 @@ node --test tests/*.test.js
 The tests compile the real template and check resource types, secure parameters,
 private endpoint/DNS links, app identity and vault role, secret references, environment
 names, and absence of RU resources/secret outputs. Negative fixtures deliberately break
-those contracts. **Compilation and unit tests do not prove Azure deployment or connectivity.**
+those contracts, including the observed ARM self-read failure, hidden variable reads,
+secure settings boundaries and dependency cycles. Synthetic first-create/repeat tests
+evaluate the compiled caller read and writer merge separately. **Compilation and unit
+tests do not prove Azure deployment or connectivity.**
 
 Before treating a deployment as validated, use a separately authorized disposable new
 environment. Verify deployment succeeds, the cluster private endpoint is Approved,

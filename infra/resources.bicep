@@ -387,12 +387,14 @@ resource web 'Microsoft.Web/sites@2022-09-01' = {
   dependsOn: [virtualNetwork]
 }
 
-// Read settings only inside a nested deployment after the site exists. Preserve
-// Redis/user settings even when an unchanged Service Connector does no work.
+// Read in the caller, after the site exists; the nested writer must not read
+// its own config resource. Preserve Redis/user keys even if the linker is a no-op.
+// Expected ARM-safe boundary; first-create/repeat deployment need live validation.
 module webAppSettings 'appsettings.bicep' = {
   name: 'appsettings'
   params: {
     webAppName: web.name
+    existingSettings: list('${web.id}/config/appsettings', '2022-09-01').properties
     newSettings: {
       SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
       AZURE_DOCUMENTDB_CONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${documentDbConnectionString.name})'
