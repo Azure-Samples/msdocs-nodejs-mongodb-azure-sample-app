@@ -8,17 +8,19 @@ const { format } = require("date-fns");
 
 // 1st party dependencies
 var indexRouter = require("./routes/index");
+const { databaseConfig } = require("./config/database");
 
 async function getApp() {
 
   // Database
-  // Use AZURE_COSMOS_CONNECTIONSTRING if available, otherwise fall back to MONGODB_URI
-  const mongoUri = process.env.AZURE_COSMOS_CONNECTIONSTRING || process.env.MONGODB_URI;
+  // Azure DocumentDB first, with legacy Cosmos DB and local MongoDB fallbacks.
+  const { uri, options } = databaseConfig();
 
-  mongoose.connect(mongoUri).then(() => {
+  mongoose.connect(uri, options).then(() => {
     console.log('Connected to database');
-  }).catch((err) => {
-    console.error('Error connecting to database:', err);
+  }).catch(() => {
+    // Driver errors can contain the connection URI. Never log credentials.
+    console.error('Error connecting to database. Check configuration, credentials, and private networking.');
   });
 
   var app = express();
