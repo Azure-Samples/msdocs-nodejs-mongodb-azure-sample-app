@@ -82,10 +82,14 @@ Steps for deployment:
 ## Local validation
 
 ```shell
-node --test tests/database.test.js
+node --test tests/database.test.js tests/routes.test.js
 # Requires Bicep on PATH (or set BICEP_BIN to its executable path):
 node --test tests/infrastructure.test.js
 ```
+
+Database connection and all four CRUD failure handlers log fixed messages, not driver
+error objects that could contain credentials. Normal task/request logging is unchanged.
+Tests execute the real routes with stubbed models, not a live database.
 
 These are offline checks, not deployment or database connectivity tests. See
 [cloud acceptance and cleanup](infra/README.md#local-checks-and-cloud-acceptance).

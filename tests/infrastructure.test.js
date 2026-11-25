@@ -12,10 +12,44 @@ const template = JSON.parse(execFileSync(process.env.BICEP_BIN || 'bicep',
 function moduleTemplate(t) {
   return t.resources.find(r => r.type === 'Microsoft.Resources/deployments').properties.template;
 }
+function allResources(t) {
+  return (t.resources || []).flatMap(r => [r, ...(r.properties?.template ? allResources(r.properties.template) : [])]);
+}
 function one(t, type) {
-  const resources = moduleTemplate(t).resources.filter(r => r.type === type);
+  const resources = allResources(t).filter(r => r.type === type);
   assert.equal(resources.length, 1, type);
   return resources[0];
+}
+function settingsModule(t) {
+  return moduleTemplate(t).resources.find(r => r.type === 'Microsoft.Resources/deployments' && r.name === 'appsettings');
+}
+function settingsResource(t) {
+  return settingsModule(t).properties.template.resources.find(r => r.type === 'Microsoft.Web/sites/config');
+}
+function ownedSettings(t) { return settingsModule(t).properties.parameters.newSettings.value; }
+const mergeExpression = "[union(list(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties, parameters('newSettings'))]";
+function settingsContract(t) {
+  const stage = settingsModule(t);
+  assert.ok(stage, 'ordered settings deployment');
+  assert.equal(stage.properties.expressionEvaluationOptions.scope, 'inner');
+  assert.equal(stage.properties.mode, 'Incremental');
+  assert.equal(stage.properties.template.parameters.newSettings.type, 'secureObject');
+  assert.equal(stage.properties.parameters.webAppName.value, "[variables('appName')]");
+  assert.ok(stage.dependsOn.includes("[resourceId('Microsoft.Web/sites', variables('appName'))]"), 'site must exist before nested read');
+  assert.ok(!JSON.stringify(stage.properties.parameters).includes('list('), 'no early or secret-valued read passed across modules');
+  assert.deepEqual(Object.keys(stage.properties.parameters).sort(), ['newSettings', 'webAppName']);
+  assert.deepEqual(stage.properties.template.outputs || {}, {}, 'never output current settings');
+  const config = settingsResource(t);
+  assert.equal(config.name, "[format('{0}/appsettings', parameters('webAppName'))]");
+  assert.equal(config.apiVersion, '2022-09-01');
+  assert.equal(config.properties, mergeExpression, 'read existing settings first, then new owned keys win');
+  assert.deepEqual(config.dependsOn || [], [], 'no self-reference dependency');
+  assert.ok(!JSON.stringify(one(t, 'Microsoft.Web/sites').dependsOn).includes('appsettings'), 'no parent cycle');
+  assert.ok(!moduleTemplate(t).resources.some(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')), 'no competing full PUT');
+  assert.equal(allResources(t).filter(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')).length, 1);
+  for (const scope of [t, moduleTemplate(t), stage.properties.template]) {
+    assert.doesNotMatch(JSON.stringify(scope.outputs || {}), /list\(|newSettings|currentSettings/i);
+  }
 }
 function contract(t) {
   const m = moduleTemplate(t);
@@ -56,10 +90,10 @@ function contract(t) {
   assert.equal(web.identity.type, 'SystemAssigned');
   assert.equal(web.properties.siteConfig.linuxFxVersion, 'NODE|24-lts');
   assert.equal(web.properties.siteConfig.vnetRouteAllEnabled, true);
-  assert.ok(!web.properties.siteConfig.appSettings, 'one coordinated appsettings writer');
-  const config = m.resources.find(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings'));
-  assert.ok(config);
-  const settings = config.properties;
+  assert.ok(!web.properties.siteConfig.appSettings, 'site resource must not reset settings');
+  settingsContract(t);
+  const config = settingsModule(t);
+  const settings = ownedSettings(t);
   assert.match(settings.AZURE_DOCUMENTDB_CONNECTIONSTRING || '', /@Microsoft.KeyVault\(SecretUri=/);
   assert.equal(settings.AZURE_DOCUMENTDB_DATABASE, 'todolist');
   assert.equal(settings.SCM_DO_BUILD_DURING_DEPLOYMENT, 'true');
@@ -93,11 +127,19 @@ const mutations = {
   'wrong private link group': t => { moduleTemplate(t).resources.find(r => r.type === 'Microsoft.Network/privateEndpoints' && r.name.includes('-db-privateEndpoint')).properties.privateLinkServiceConnections[0].properties.groupIds = ['MongoDB']; },
   'missing DNS zone': t => { moduleTemplate(t).resources = moduleTemplate(t).resources.filter(r => r.name !== 'privatelink.mongocluster.cosmos.azure.com'); },
   'missing vault permission': t => { moduleTemplate(t).resources = moduleTemplate(t).resources.filter(r => r.type !== 'Microsoft.Authorization/roleAssignments'); },
-  'wrong application setting': t => { delete moduleTemplate(t).resources.find(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')).properties.AZURE_DOCUMENTDB_CONNECTIONSTRING; },
+  'wrong application setting': t => { delete ownedSettings(t).AZURE_DOCUMENTDB_CONNECTIONSTRING; },
   'unencoded password': t => { one(t, 'Microsoft.KeyVault/vaults/secrets').properties.value = "[parameters('documentDbAdministratorPassword')]"; },
   'missing DNS endpoint group': t => { moduleTemplate(t).resources = moduleTemplate(t).resources.filter(r => !(r.type.endsWith('/privateDnsZoneGroups') && r.name.includes('-db-privateEndpoint'))); },
-  'secret appsetting': t => { moduleTemplate(t).resources.find(r => r.type === 'Microsoft.Web/sites/config' && r.name.includes('appsettings')).properties.AZURE_DOCUMENTDB_CONNECTIONSTRING = "[parameters('documentDbAdministratorPassword')]"; },
-  'public database': t => { one(t, 'Microsoft.DocumentDB/mongoClusters').properties.publicNetworkAccess = 'Enabled'; }
+  'secret appsetting': t => { ownedSettings(t).AZURE_DOCUMENTDB_CONNECTIONSTRING = "[parameters('documentDbAdministratorPassword')]"; },
+  'public database': t => { one(t, 'Microsoft.DocumentDB/mongoClusters').properties.publicNetworkAccess = 'Enabled'; },
+  'destructive settings PUT': t => { settingsResource(t).properties = "[parameters('newSettings')]"; },
+  'old settings overriding owned keys': t => { settingsResource(t).properties = "[union(parameters('newSettings'), list(resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings'), '2022-09-01').properties)]"; },
+  'early settings read without site dependency': t => { settingsModule(t).dependsOn = settingsModule(t).dependsOn.filter(x => x !== "[resourceId('Microsoft.Web/sites', variables('appName'))]"); },
+  'outer-scope settings evaluation': t => { settingsModule(t).properties.expressionEvaluationOptions.scope = 'outer'; },
+  'settings leaked as module output': t => { settingsModule(t).properties.template.outputs = { settings: { type: 'object', value: settingsResource(t).properties } }; },
+  'plaintext settings parameter': t => { settingsModule(t).properties.template.parameters.newSettings.type = 'object'; },
+  'self-dependent settings resource': t => { settingsResource(t).dependsOn = ["[resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings')]"]; }
+
 };
 for (const [name, mutate] of Object.entries(mutations)) test(`rejects ${name}`, () => {
   const broken = structuredClone(template); mutate(broken); assert.throws(() => contract(broken));
@@ -140,4 +182,50 @@ test('compiled secret expression encodes credentials independently and preserves
   assert.equal(parsed.host, 'cluster.global.invalid');
   assert.equal(parsed.search, '?tls=true&authSource=admin&retryWrites=false');
   assert.ok(!hydrated.includes('<user>') && !hydrated.includes('<password>'));
+});
+
+// Evaluate the actual emitted expression, with list() stubbed to a synthetic
+// service response. This verifies local merge semantics, not ARM/provider runtime.
+function applySettings(existing) {
+  settingsContract(template);
+  const expression = settingsResource(template).properties;
+  const tokens = expression.slice(1, -1).match(/'(?:''|[^'])*'|[A-Za-z][A-Za-z0-9]*|[().,]/g);
+  let i = 0;
+  let reads = 0;
+  const functions = {
+    parameters: key => ({ webAppName: 'synthetic-app', newSettings: ownedSettings(template) })[key],
+    resourceId: (...args) => { assert.deepEqual(args, ['Microsoft.Web/sites/config', 'synthetic-app', 'appsettings']); return 'synthetic-appsettings-id'; },
+    list: (id, version) => { assert.equal(id, 'synthetic-appsettings-id'); assert.equal(version, '2022-09-01'); reads++; return { properties: existing }; },
+    union: (...objects) => Object.assign({}, ...objects)
+  };
+  function value() {
+    const token = tokens[i++];
+    if (token.startsWith("'")) return token.slice(1, -1).replaceAll("''", "'");
+    assert.equal(tokens[i++], '(');
+    const args = [];
+    if (tokens[i] !== ')') do { args.push(value()); } while (tokens[i] === ',' && ++i);
+    assert.equal(tokens[i++], ')');
+    assert.ok(token in functions);
+    let result = functions[token](...args);
+    if (tokens[i] === '.') { i++; result = result[tokens[i++]]; }
+    return result;
+  }
+  const result = value(); assert.equal(i, tokens.length); assert.equal(reads, 1); return result;
+}
+test('new site empty dictionary receives the owned settings', () => {
+  assert.deepEqual(applySettings({}), ownedSettings(template));
+});
+test('repeat PUT preserves Redis and custom keys even if unchanged linker is a no-op', () => {
+  const existing = {
+    ...ownedSettings(template),
+    AZURE_REDIS_CONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=https://synthetic.invalid/secrets/redis)',
+    USER_KEY: 'synthetic-preserved',
+    AZURE_DOCUMENTDB_CONNECTIONSTRING: 'old-reference',
+    AZURE_DOCUMENTDB_DATABASE: 'old-database',
+    SCM_DO_BUILD_DURING_DEPLOYMENT: 'false'
+  };
+  const afterPut = applySettings(existing);
+  const afterUnchangedLinker = { ...afterPut }; // no restoration side effect assumed
+  assert.deepEqual(afterUnchangedLinker, { ...existing, ...ownedSettings(template) });
+  assert.deepEqual(applySettings(afterUnchangedLinker), afterUnchangedLinker);
 });

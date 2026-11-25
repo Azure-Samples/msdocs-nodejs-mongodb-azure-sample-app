@@ -52,11 +52,20 @@ Managed Redis, private endpoints, and logging also incur charges.
   design and provision an appropriately scoped application user separately.
 - The deployment principal needs resource deployment and role-assignment permissions.
   The existing Managed Redis Service Connector remains for Redis only. No DocumentDB
-  Service Connector support is assumed. A single explicit appsettings resource runs
-  after RBAC/network setup, then the Redis connector is ordered after it. Repeat
-  provisioning must verify the connector reapplies its settings; do not treat static
-  ordering as runtime proof. The hook lists the explicit database setting
-  names only; inspect Service Connector for the Redis settings it manages.
+  Service Connector support is assumed. An ordered `appsettings.bicep` module starts
+  only after the site and RBAC/network setup exist. Inside it, the existing settings
+  dictionary is read and merged before the full settings PUT; the three template-owned
+  DocumentDB/build keys override previous values, while Redis and user keys survive.
+  The Redis connector remains ordered afterwards, but preservation does not depend on
+  an unchanged connector reapplying settings. No existing settings are output or passed
+  through module parameters; the read can contain plaintext secrets, so do not enable
+  request/response debug logging or dump settings during deployment troubleshooting.
+  The deployment principal also needs permission to list application settings.
+  This read/merge is not an atomic lock: serialize deployments and external settings
+  edits to avoid concurrent-writer races. First deployment and repeat provisioning
+  still need Azure acceptance. The hook lists database setting names only.
+  See the [appsettings list API](https://learn.microsoft.com/rest/api/appservice/web-apps/list-application-settings?view=rest-appservice-2022-09-01)
+  and the [official AVM retain-current-settings pattern](https://github.com/Azure/bicep-registry-modules/blob/abbc773d571ad6cc75591125ad74c8372c483550/avm/res/web/site/main.bicep).
 
 ## Private networking and rotation
 

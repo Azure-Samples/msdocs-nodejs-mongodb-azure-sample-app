@@ -387,16 +387,17 @@ resource web 'Microsoft.Web/sites@2022-09-01' = {
   dependsOn: [virtualNetwork]
 }
 
-// Apply database settings after identity/RBAC and private DNS exist. The Redis
-// connector is ordered afterwards to restore its managed settings; verify repeat
-// deployments in Azure before relying on that Service Connector behavior.
-resource webAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
-  parent: web
+// Read settings only inside a nested deployment after the site exists. Preserve
+// Redis/user settings even when an unchanged Service Connector does no work.
+module webAppSettings 'appsettings.bicep' = {
   name: 'appsettings'
-  properties: {
-    SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
-    AZURE_DOCUMENTDB_CONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${documentDbConnectionString.name})'
-    AZURE_DOCUMENTDB_DATABASE: 'todolist'
+  params: {
+    webAppName: web.name
+    newSettings: {
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'true'
+      AZURE_DOCUMENTDB_CONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/${documentDbConnectionString.name})'
+      AZURE_DOCUMENTDB_DATABASE: 'todolist'
+    }
   }
   dependsOn: [
     webKeyVaultSecretsUser

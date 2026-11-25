@@ -13,8 +13,8 @@ router.get('/', function(req, res, next) {
       console.log(`Total tasks: ${tasks.length}   Current tasks: ${currentTasks.length}    Completed tasks:  ${completedTasks.length}`)
       res.render('index', { currentTasks: currentTasks, completedTasks: completedTasks });
     })
-    .catch((err) => {
-      console.log(err);
+    .catch(() => {
+      console.error('Database error reading tasks.');
       res.send('Sorry! Something went wrong.');
     });
 });
@@ -34,8 +34,8 @@ router.post('/addTask', function(req, res, next) {
       .then(() => { 
         console.log(`Added new task ${taskName} - createDate ${createDate}`)        
         res.redirect('/'); })
-      .catch((err) => {
-          console.log(err);
+      .catch(() => {
+          console.error('Database error adding a task.');
           res.send('Sorry! Something went wrong.');
       });
 });
@@ -49,8 +49,8 @@ router.post('/completeTask', function(req, res, next) {
     .then(() => { 
       console.log(`Completed task ${taskId}`)
       res.redirect('/'); }  )
-    .catch((err) => {
-      console.log(err);
+    .catch(() => {
+      console.error('Database error completing a task.');
       res.send('Sorry! Something went wrong.');
     });
 });
@@ -63,8 +63,8 @@ router.post('/deleteTask', function(req, res, next) {
     .then(() => { 
       console.log(`Deleted task $(taskId)`)      
       res.redirect('/'); }  )
-    .catch((err) => {
-      console.log(err);
+    .catch(() => {
+      console.error('Database error deleting a task.');
       res.send('Sorry! Something went wrong.');
     });
 });
